@@ -15,41 +15,38 @@ namespace util {
 	 : concat<TupleSet_T<Tup1<T1s..., T2s...>, Ts...>> { };
 	
 	template<CONTAINER TupleSet_T, CONTAINER Tup, typename ... Ts> 
-	struct concat<TupleSet_T<Tup<Ts...>>> 
-	{ using type = Tup<Ts...>; };
+	struct concat<TupleSet_T<Tup<Ts...>>> { using type = Tup<Ts...>; };
 	
 	template<CONTAINER TupleSet_T> 
-	struct concat<TupleSet_T<>> 
-	{ using type = std::tuple<>; };
-}
+	struct concat<TupleSet_T<>> { using type = std::tuple<>; };
 
 
-// [ ] append
-namespace util {
+
 	template<typename Tup, typename T> 
-	using append = concat<std::tuple<Tup, std::tuple<T>>>;
+	struct append;
+	
+	template<CONTAINER Tup, typename ... Ts, typename T> 
+	struct append<Tup<Ts...>, T> { using type = Tup<Ts..., T>; };
 
-	template<typename Tup> struct append_ 
-	{ template<typename T> using type = append<Tup, T>; };
+	template<typename T> struct append_ 
+	{ template<typename Tup> using type = append<Tup, T>; };
 
 	template<typename Tup, typename T> 
 	using append_t = typename append<Tup, T>::type;
-}
 
-// [ ] prepend
-namespace util {
+
+
 	template<typename Tup, typename T> 
 	using prepend = concat<std::tuple<std::tuple<T>, Tup>>;
 
-	template<typename Tup> struct prepend_ 
-	{ template<typename T> using type = prepend<Tup, T>; };
+	template<typename T> struct prepend_ 
+	{ template<typename Tup> using type = prepend<Tup, T>; };
 
 	template<typename Tup, typename T> 
 	using prepend_t = typename prepend<Tup, T>::type;
-}
 
-// [ ] pop_front
-namespace util {
+
+
 	template<typename Tup> 
 	struct pop_front;
 	
@@ -58,22 +55,23 @@ namespace util {
 	
 	template<typename Tup> 
 	using pop_front_t = typename pop_front<Tup>::type;
-}
 
-// [ ] pop_back
-namespace util {
+
+
 	template<typename Tup> 
 	struct pop_back;
 	
-	template<CONTAINER Tup, typename ... Ts, typename T>
-	struct pop_back<Tup<Ts..., T>> { using type = Tup<Ts...>; };
+	template<CONTAINER Tup, typename T> 
+	struct pop_back<Tup<T>> { using type = std::tuple<>; };
+
+	template<CONTAINER Tup, typename T, typename ... Ts>
+	struct pop_back<Tup<T, Ts...>> { using type = append<T, pop_back<Ts...>>; };
 	
 	template<typename Tup> 
 	using pop_back_t = typename pop_back<Tup>::type;
-}
 
-// [ ] get_front/back
-namespace util {
+
+
 	template<typename Tup> 
 	struct get_front;
 	
@@ -83,60 +81,67 @@ namespace util {
 	template<typename Tup> 
 	using get_front_t = typename get_front<Tup>::type;
 
+
+
 	template<typename Tup> 
 	struct get_back;
 	
+	template<CONTAINER Tup, typename T> 
+	struct get_back<Tup<T>> { using type = T; };
+	
 	template<CONTAINER Tup, typename ... Ts, typename T>
-	struct get_back<Tup<Ts..., T>> { using type = T; };
+	struct get_back<Tup<T, Ts...>> : get_back<Tup<Ts...>> { };
 	
 	template<typename Tup> 
-	using get_back_t = typename get_front<Tup>::type;
+	using get_back_t = typename get_back<Tup>::type;
 
-	template<typename Tup, PREDICATE Match_T> 
+
+
+	template<typename Tup, PREDICATE Pred_T> 
 	struct filter;
 	
-	template<PREDICATE Match_T>
+	template<PREDICATE Pred_T>
 	struct filter_;
 	
-	template<typename Tup, PREDICATE Match_T>
-	using filter_t = typename filter<Tup, Match_T>::type;
+	template<typename Tup, PREDICATE Pred_T>
+	using filter_t = typename filter<Tup, Pred_T>::type;
 	
-	template<CONTAINER Tup, typename ... Ts, PREDICATE Match_T> 
-	struct filter<Tup<Ts...>, Match_T>
-	 : concat<std::tuple<Tup<>, std::conditional_t<Match_T<Ts>::value, Tup<Ts>, Tup<>>...>> { };
+	template<CONTAINER Tup, typename ... Ts, PREDICATE Pred_T> 
+	struct filter<Tup<Ts...>, Pred_T>
+	 : concat<std::tuple<Tup<>, std::conditional_t<Pred_T<Ts>::value, Tup<Ts>, Tup<>>...>> { };
 	
-	template<PREDICATE Match_T> 
+	template<PREDICATE Pred_T> 
 	struct filter_ 
-	{ template<typename Tup> using type = filter<Tup, Match_T>; };
+	{ template<typename Tup> using type = filter<Tup, Pred_T>; };
 
 
 
-	template<typename Tup, PREDICATE Match_T, int index=0, typename=void> 
-	struct find_first;
+	template<typename Tup, PREDICATE Pred_T, int index=0, typename=void> 
+	struct find;
 	
-	template<PREDICATE Match_T>
-	struct find_first_;
+	template<PREDICATE Pred_T>
+	struct find_;
 
-	template<typename Tup, PREDICATE Match_T> 
-	using find_first_t = typename find_first<Tup, Match_T>::type;
+	template<typename Tup, PREDICATE Pred_T> 
+	using find_t = typename find<Tup, Pred_T>::type;
 
-	template<typename Tup, PREDICATE Match_T> 
-	static constexpr int find_first_v = find_first<Tup, Match_T>::value;
+	template<typename Tup, PREDICATE Pred_T> 
+	static constexpr int find_v = find<Tup, Pred_T>::value;
 
-	template<CONTAINER Tup, typename T, typename ... Ts, PREDICATE Match_T, int index>
-	struct find_first<Tup<T, Ts...>, Match_T, index, std::enable_if_t<Match_T<T>::value>>
+	template<CONTAINER Tup, typename T, typename ... Ts, PREDICATE Pred_T, int index>
+	struct find<Tup<T, Ts...>, Pred_T, index, std::enable_if_t<Pred_T<T>::value>>
 	 : std::type_identity<T> { static constexpr int value = index; };
 
-	template<CONTAINER Tup, typename T, typename ... Ts, PREDICATE Match_T, int index>
-	struct find_first<Tup<T, Ts...>, Match_T, index, std::enable_if_t<!Match_T<T>::value>>
-	 : find_first<Tup<Ts...>, Match_T, index + 1> { };
+	template<CONTAINER Tup, typename T, typename ... Ts, PREDICATE Pred_T, int index>
+	struct find<Tup<T, Ts...>, Pred_T, index, std::enable_if_t<!Pred_T<T>::value>>
+	 : find<Tup<Ts...>, Pred_T, index + 1> { };
 
-	template<CONTAINER Tup, PREDICATE Match_T, int index>
-	struct find_first<Tup<>, Match_T, index, void>
+	template<CONTAINER Tup, PREDICATE Pred_T, int index>
+	struct find<Tup<>, Pred_T, index, void>
 	 : std::type_identity<void> { };
 
-	template<PREDICATE Match_T> 
-	struct find_first_ { template<typename Tup> using type = find_first<Tup, Match_T>; };
+	template<PREDICATE Pred_T> 
+	struct find_ { template<typename Tup> using type = find<Tup, Pred_T>; };
 
 
 
@@ -231,13 +236,13 @@ namespace util {
 
 
 	
-	template<typename Tup, COMPARE Same_T>
+	template<typename Tup, COMPARE Same_T=std::is_same>
 	struct unique;
 	
-	template<COMPARE Same_T> 
+	template<COMPARE Same_T=std::is_same>
 	struct unique_;
 
-	template<typename Tup, COMPARE Same_T>
+	template<typename Tup, COMPARE Same_T=std::is_same>
 	using unique_t = typename unique<Tup, Same_T>::type;
 
 	template<CONTAINER Tup, typename T, typename ... Ts, COMPARE Same_T>
@@ -292,7 +297,7 @@ namespace util {
 	using set_intersect_t = typename set_intersect<Tup, Set_T, Same_T>::type;
 	
 	template<typename Tup1, typename Tup2, COMPARE Same_T>
-	struct set_intersect : filter<set_union_t<Tup1, Tup2, Same_T>,	pred::conjunction_<
+	struct set_intersect : filter<set_union_t<Tup1, Tup2, Same_T>,	pred::conj_<
 		pred::element_of_<Tup1, Same_T>::template type, 
 		pred::element_of_<Tup2, Same_T>::template type
 	>::template type> { };

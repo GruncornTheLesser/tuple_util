@@ -4,16 +4,17 @@
 
 namespace util::pred {
 	template<PREDICATE Pred_T> 
-	struct negate_
-	 { template<typename T> using type = std::negation<Pred_T<T>>; };
+	struct negate_ { 
+		template<typename T> using type = std::negation<Pred_T<T>>; 
+	};
 
 	template<PREDICATE ... Pred_Ts>
-	struct disjunction_ { 
+	struct disj_ { 
 		template<typename T> using type = std::disjunction<Pred_Ts<T>...>; 
 		template<typename T> using negated = std::negation<type<T>>;
 	};
 	template<PREDICATE ... Pred_Ts>
-	struct conjunction_ { 
+	struct conj_ { 
 		template<typename T> using type = std::conjunction<Pred_Ts<T>...>; 
 		template<typename T> using negated = std::negation<type<T>>;
 	};
@@ -41,16 +42,17 @@ namespace util::pred {
 	
 	template<typename Tup, PREDICATE Pred_T> 
 	static constexpr bool allof_v = allof<Tup, Pred_T>::value;
-}
 
 
 
-// [ ] pred transformed - pred
-namespace util::pred {
-	template<typename T, PREDICATE Pred_T, TRANSFORM Trans_T> struct transformed : Pred_T<typename Trans_T<T>::type> { };
-	template<typename T, PREDICATE Pred_T, TRANSFORM Trans_T> using transformed_v = transformed<T, Pred_T, Trans_T>::value;
-	template<PREDICATE Pred_T, TRANSFORM Trans_T> struct transformed_ { 
-		template<typename T> using type = Pred_T<typename transformed<T, Pred_T, Trans_T>::type>; 
+	template<typename T, PREDICATE Pred_T, TRANSFORM Trans_T> 
+	struct evaled : Pred_T<typename Trans_T<T>::type> { };
+	
+	template<typename T, PREDICATE Pred_T, TRANSFORM Trans_T> 
+	using evaled_v = evaled<T, Pred_T, Trans_T>::value;
+	
+	template<PREDICATE Pred_T, TRANSFORM Trans_T> struct evaled_ { 
+		template<typename T> using type = Pred_T<typename evaled<T, Pred_T, Trans_T>::type>; 
 		template<typename T> using negated = std::negation<type<T>>; };
 }
 
