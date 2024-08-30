@@ -9,7 +9,7 @@ template<typename T, typename Arg>
 struct foobar { using type = ...; };
 
 template<typename T, typename Arg>
-using foobar_t = typename xxx::type;
+using foobar_t = typename foobar::type;
 
 template<typename Arg>
 struct foobar_ { template<typename T> using type = foobar<T, Arg>; };
