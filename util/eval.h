@@ -93,4 +93,11 @@ namespace util {
 
 	template<typename T, TRANSFORM ... Trans_Ts>
 	using eval_branch_t = typename eval_branch<T, Trans_Ts...>::type;
+
+
+
+	template<TRANSFORM Trans_T, typename ... Arg_Ts>
+	struct add_type_args_ { 
+		template<typename ... Ts> using type = Trans_T<Ts..., Arg_Ts...>;
+	};
 }
