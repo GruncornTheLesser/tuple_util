@@ -47,4 +47,12 @@ namespace util::pred {
 	
 	template<typename T, CONTAINER Tup>
 	static constexpr bool is_wrapped_by_v = is_wrapped_by<T, Tup>::value;
+
+
+
+	template <typename T, typename=void>
+	struct is_tuple : is_wrapped_by<std::remove_cv_t<T>, std::tuple> { };
+
+	template <typename T>
+	static constexpr bool is_tuple_v = is_tuple<T>::value;
 }

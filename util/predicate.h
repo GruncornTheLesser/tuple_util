@@ -8,11 +8,18 @@ namespace util::pred {
 		template<typename T> using type = std::negation<Pred_T<T>>; 
 	};
 
+	template<typename T, PREDICATE ... Pred_Ts>
+	using disj = std::disjunction<Pred_Ts<T>...>;
+
 	template<PREDICATE ... Pred_Ts>
 	struct disj_ { 
 		template<typename T> using type = std::disjunction<Pred_Ts<T>...>; 
 		template<typename T> using negated = std::negation<type<T>>;
 	};
+	
+	template<typename T, PREDICATE ... Pred_Ts>
+	using conj = std::conjunction<Pred_Ts<T>...>;
+
 	template<PREDICATE ... Pred_Ts>
 	struct conj_ { 
 		template<typename T> using type = std::conjunction<Pred_Ts<T>...>; 
@@ -83,4 +90,9 @@ namespace util::pred {
 	static constexpr bool contains_v = element_of<T, Tup, Same_T>::value;
 }
 
-
+namespace util {
+	template<typename T, PREDICATE Pred_T>
+	struct util_assert { using type = T; static_assert(Pred_T<T>::value); };
+	template<PREDICATE Pred_T>
+	struct assert_ { template<typename T> using type = util_assert<T, Pred_T>; };
+}

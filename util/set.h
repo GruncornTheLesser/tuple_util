@@ -313,8 +313,3 @@ namespace util::pred {
 	template<typename SuperSet_T, COMPARE Cmp_T=std::is_same>
 	struct is_subset_ { template<typename SubSet_T> using type = is_subset<SubSet_T, SuperSet_T, Cmp_T>; };
 }
-// sort
-// filter
-// unique
-// union
-// intersection
