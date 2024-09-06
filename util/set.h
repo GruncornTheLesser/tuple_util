@@ -14,6 +14,11 @@ namespace util {
 	template<CONTAINER Set_T, typename Tup1, typename ... Tups>
 	struct concat<Set_T<Tup1, Tups...>> : util::copy_cvref<decltype(std::tuple_cat(std::declval<Tup1>(), std::declval<Tups>()...)), Tup1> { };
 	
+	template<CONTAINER Set_T, typename Tup>
+	struct concat<Set_T<Tup>> : std::type_identity<Tup> { };
+
+
+
 	template<typename Tup, typename T> 
 	using append = concat<std::tuple<Tup, std::tuple<T>>>;
 	
@@ -129,7 +134,7 @@ namespace util {
 
 
 	template<typename Tup, COMPARE Cmp_T, typename=void>
-	struct find_most : copy_cvref<typename find_most<std::remove_cvref_t<Tup>, Cm_T>::type, Tup> { };
+	struct find_most : copy_cvref<typename find_most<std::remove_cvref_t<Tup>, Cmp_T>::type, Tup> { };
 
 	template<typename Tup, COMPARE Cmp_T, typename=void>
 	using find_most_t = typename find_most<Tup, Cmp_T>::type;
