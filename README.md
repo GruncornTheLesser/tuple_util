@@ -1,5 +1,5 @@
 ## Intro
-metaprogramming library for people who dont like coding in c++ and would instead prefer repeated smashing their head against the nearest hard surface. 
+metaprogramming library for people who dont like coding in c++ and would instead prefer repeated smashing their head against the nearest hard surface.
 works in c++20 and above.
 
 ## syntax construction
@@ -27,7 +27,7 @@ macros exist for the different types of template parameter argument
 ## code example
 ```c++
 // tuple manipulation
-using sort_example = util::sort_t<std::tuple<val<3>, val<2>, val<1>>, util::cmp::lt_<>::type>; // std::tuple<val<1>, val<2>, val<3>> 
+using sort_example = util::sort_t<std::tuple<val<3>, val<2>, val<1>>, util::cmp::lt_<>::type>; // std::tuple<val<1>, val<2>, val<3>>
 using filter_example = util::filter_t<std::tuple<int, float, char>, util::cmp::to_<float>::type>; // tuple<float>
 using unique_example = util::unique_t<std::tuple<int, int, float, char>>; // tuple<int, float, char>
 using find_example = util::find_t<std::tuple<const int, float>, util::cmp::to_<int, util::cmp::is_ignore_const_same>::type>; // const int
@@ -57,4 +57,4 @@ template<typename ... Ts> struct example_tuple { };
 using rewrap_example = util::rewrap_t<std::tuple<int, float, char>, example_tuple>; // example_tuple<int, float, char>;
 ```
 ## motivation
-I apparently dont like coding in c++ and would instead prefer smashing my head against the nearest hard surface. 
+I apparently dont like coding in c++ and would instead prefer smashing my head against the nearest hard surface.
