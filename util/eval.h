@@ -36,7 +36,7 @@ namespace util {
 	struct eval_if<T, Pred_T, If_T, Else_T, std::enable_if_t<!Pred_T<T>::value>>
 	 : Else_T<T> { };
 
-	template<PREDICATE Pred_T, TRANSFORM If_T, TRANSFORM Else_T>
+	template<PREDICATE Pred_T, TRANSFORM If_T, TRANSFORM Else_T = eval_<>::type>
 	struct eval_if_
 	{
 		template<typename T> using type = eval_if<T, Pred_T, If_T, Else_T>;
@@ -79,13 +79,13 @@ namespace util {
 
 
 	template<typename T, TRANSFORM ... Trans_Ts>
-	struct eval_branch { using type = std::tuple<typename Trans_Ts<T>::type...>; };
+	struct eval_split { using type = std::tuple<typename Trans_Ts<T>::type...>; };
 
 	template<typename T, TRANSFORM ... Trans_Ts>
-	using eval_branch_t = typename eval_branch<T, Trans_Ts...>::type;
+	using eval_split_t = typename eval_split<T, Trans_Ts...>::type;
 
 	template<TRANSFORM ... Trans_Ts>
-	struct eval_branch_ { template<typename T> using type = eval_branch<T, Trans_Ts...>; };
+	struct eval_split_ { template<typename T> using type = eval_split<T, Trans_Ts...>; };
 
 
 

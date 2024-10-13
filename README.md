@@ -47,7 +47,7 @@ using get_back_example = util::get_back_t<std::tuple<int, float>>; // float;
 using eval_example = util::eval_t<int, std::add_const, std::add_volatile>; // const volatile int;
 using eval_each_example = util::eval_each_t<std::tuple<int, float, char>, std::add_const>; // tuple<const int, const float const char>
 using eval_if_example = util::eval_if_t<const int, std::is_const, std::add_pointer, std::add_volatile>; // const int*
-using eval_branch_example = util::eval_branch_t<int, std::add_const, std::add_pointer, std::add_cv>; // tuple<const int, int*, const volatile int>;
+using eval_split_example = util::eval_split_t<int, std::add_const, std::add_pointer, std::add_cv>; // tuple<const int, int*, const volatile int>;
 using post_eval_if_example = util::post_eval_if_t<const std::tuple<int>, util::unwrap, std::is_const, std::add_const>; // const int
 
 // wrapping
