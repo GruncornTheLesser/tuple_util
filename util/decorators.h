@@ -210,3 +210,48 @@ namespace util::cmp {
 	template<typename LHS_T, typename RHS_T>
 	static constexpr bool is_const_accessible_v = is_const_accessible<LHS_T, RHS_T>::value;
 }
+
+namespace util::pred {
+	template<typename T> struct is_ignore_ref_const : std::is_const<std::remove_reference_t<T>> { };
+	template<typename T> static constexpr bool is_ignore_ref_const_v = is_ignore_ref_const<T>::value;
+
+	template<typename T> struct is_ignore_ref_volatile : std::is_volatile<std::remove_reference_t<T>> { };
+	template<typename T> static constexpr bool is_ignore_ref_volatile_v = is_ignore_ref_volatile<T>::value;
+}
+
+
+namespace util {
+	template<typename T> using add_ignore_ref_const = std::conditional<std::is_reference_v<T>, const std::remove_reference_t<T>&, const T>;
+	template<typename T> using add_ignore_ref_const_t = typename add_ignore_ref_const<T>::type;
+
+	template<typename T> using add_ignore_ref_volatile = std::conditional<std::is_reference_v<T>, volatile std::remove_reference_t<T>&, volatile T>;
+	template<typename T> using add_ignore_ref_volatile_t = typename add_ignore_ref_volatile<T>::type;
+	
+	template<typename T, typename U, typename=std::void_t<>> struct copy_ignore_ref_const : std::type_identity<T> { };
+	template<typename T, typename U> struct copy_ignore_ref_const<T, U, std::enable_if_t<pred::is_ignore_ref_const_v<U>>> : add_ignore_ref_const<T> { };
+	template<typename T, typename U> using copy_ignore_ref_const_t = typename copy_ignore_ref_const<T, U>::type;
+
+	template<typename T, typename U, typename=std::void_t<>> struct copy_ignore_ref_volatile : std::type_identity<T> { };
+	template<typename T, typename U> struct copy_ignore_ref_volatile<T, U, std::enable_if_t<pred::is_ignore_ref_volatile_v<U>>> : add_ignore_ref_volatile<T> { };
+	template<typename T, typename U> using copy_ignore_ref_volatile_t = typename copy_ignore_ref_volatile<T, U>::type;
+
+	template<typename T, typename U, typename=std::void_t<>> struct copy_ignore_ref_cv;
+	template<typename T, typename U> struct copy_ignore_ref_cv<T, U, std::enable_if_t<!pred::is_ignore_ref_const_v<U> && !pred::is_ignore_ref_volatile_v<U>>> : std::type_identity<T> { };
+	template<typename T, typename U> struct copy_ignore_ref_cv<T, U, std::enable_if_t<pred::is_ignore_ref_const_v<U> && !pred::is_ignore_ref_volatile_v<U>>> : add_ignore_ref_const<T> { };
+	template<typename T, typename U> struct copy_ignore_ref_cv<T, U, std::enable_if_t<!pred::is_ignore_ref_const_v<U> && pred::is_ignore_ref_volatile_v<U>>> : add_ignore_ref_volatile<T> { };
+	template<typename T, typename U> struct copy_ignore_ref_cv<T, U, std::enable_if_t<pred::is_ignore_ref_const_v<U> && pred::is_ignore_ref_volatile_v<U>>>
+	 : std::conditional<std::is_reference_v<T>, const volatile std::remove_reference_t<T>&, const volatile T> { };
+	template<typename T, typename U> using copy_ignore_ref_cv_t = typename copy_ignore_ref_cv<T, U>::type;
+
+
+
+}
+
+static_assert(std::is_same_v<util::copy_ignore_ref_const_t<int&, int>, int&>);
+static_assert(std::is_same_v<util::copy_ignore_ref_const_t<int&, const int>, const int&>);
+static_assert(std::is_same_v<util::copy_ignore_ref_const_t<int&, const int>, const int&>);
+static_assert(std::is_same_v<util::copy_ignore_ref_const_t<int&, const int>, const int&>);
+static_assert(std::is_same_v<util::copy_ignore_ref_const_t<int, int>, int>);
+static_assert(std::is_same_v<util::copy_ignore_ref_const_t<int, const int>, const int>);
+static_assert(std::is_same_v<util::copy_ignore_ref_const_t<int, const int>, const int>);
+static_assert(std::is_same_v<util::copy_ignore_ref_const_t<int, const int>, const int>);

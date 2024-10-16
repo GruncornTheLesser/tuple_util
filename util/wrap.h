@@ -21,15 +21,11 @@ namespace util {
 	using wrap_t = typename wrap<T, Tups...>::type;
 
 
-	template<typename T, typename=void>
+	template<typename T>
 	struct unwrap;
 	template<CONTAINER Tup, typename T>
-	struct unwrap<Tup<T>, std::enable_if_t<!std::is_pointer_v<T> && !std::is_reference_v<T> && !std::is_volatile_v<T> && !std::is_const_v<T>>> // TODO probably better way to do this
+	struct unwrap<Tup<T>>
 	 : std::type_identity<T> { };
-
-	template<typename T>
-	struct unwrap<T, std::enable_if_t<std::is_pointer_v<T> || std::is_reference_v<T> || std::is_volatile_v<T> || std::is_const_v<T>>>
-	 : unwrap<std::remove_pointer_t<std::remove_cvref_t<T>>> { };
 
 	template<typename T>
 	using unwrap_t = typename unwrap<T>::type;
