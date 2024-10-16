@@ -11,11 +11,25 @@ namespace util {
 	template<typename Tup>
 	using concat_t = typename concat<Tup>::type;
 
-	template<CONTAINER Set_T, typename Tup1, typename ... Tups>
-	struct concat<Set_T<Tup1, Tups...>> : util::copy_cvref<decltype(std::tuple_cat(std::declval<Tup1>(), std::declval<Tups>()...)), Tup1> { };
+	template<CONTAINER Set_T, CONTAINER Tup1, typename ... T1s, CONTAINER Tup2, typename ... T2s, typename ... Tups>
+	struct concat<Set_T<Tup1<T1s...>, Tup2<T2s...>, Tups...>> : concat<Set_T<Tup1<T1s..., T2s...>, Tups...>> { };
 
-	template<CONTAINER Set_T, typename Tup>
-	struct concat<Set_T<Tup>> : std::type_identity<Tup> { };
+	template<CONTAINER Set_T, CONTAINER Tup, typename ... Ts>
+	struct concat<Set_T<Tup<Ts...>>> : std::type_identity<Tup<Ts...>> { };
+
+
+
+	template<typename Tup>
+	struct reverse;
+
+	template<typename Tup>
+	using reverse_t = typename reverse<Tup>::type;
+
+	template<CONTAINER Tup, typename ... Ts, typename T>
+	struct reverse<Tup<Ts..., T>> : concat<std::tuple<Tup<T>, typename reverse<Ts...>::type>> { };
+
+	template<CONTAINER Tup>
+	struct reverse<Tup<>> : std::type_identity<Tup<>> { };
 
 
 
@@ -46,6 +60,9 @@ namespace util {
 
 	template<CONTAINER Tup, typename T, typename ... Ts>
 	struct pop_front<Tup<T, Ts...>> { using type = Tup<Ts...>; };
+	
+	template<CONTAINER Tup>
+	struct pop_front<Tup<>> : std::type_identity<void> { };
 
 	template<typename Tup>
 	using pop_front_t = typename pop_front<Tup>::type;
@@ -61,6 +78,9 @@ namespace util {
 	template<CONTAINER Tup, typename T, typename ... Ts>
 	struct pop_back<Tup<T, Ts...>> { using type = append<T, pop_back<Ts...>>; };
 
+	template<CONTAINER Tup>
+	struct pop_back<Tup<>> : std::type_identity<void> { };
+
 	template<typename Tup>
 	using pop_back_t = typename pop_back<Tup>::type;
 
@@ -71,6 +91,9 @@ namespace util {
 
 	template<CONTAINER Tup, typename T, typename ... Ts>
 	struct get_front<Tup<T, Ts...>> { using type = T; };
+
+	template<CONTAINER Tup>
+	struct get_front<Tup<>> : std::type_identity<void> { };
 
 	template<typename Tup>
 	using get_front_t = typename get_front<Tup>::type;
@@ -85,6 +108,9 @@ namespace util {
 
 	template<CONTAINER Tup, typename ... Ts, typename T>
 	struct get_back<Tup<T, Ts...>> : get_back<Tup<Ts...>> { };
+	
+	template<CONTAINER Tup>
+	struct get_back<Tup<>> : std::type_identity<void> { };
 
 	template<typename Tup>
 	using get_back_t = typename get_back<Tup>::type;
@@ -103,7 +129,10 @@ namespace util {
 
 	template<PREDICATE Pred_T>
 	struct filter_
-	{ template<typename Tup> using type = filter<Tup, Pred_T>; };
+	{ 
+		template<typename Tup> using type = filter<Tup, Pred_T>;
+		template<typename Tup> using inverse = filter<Tup, util::pred::negate_<Pred_T>::template type>;
+	};
 
 
 
@@ -207,7 +236,7 @@ namespace util {
 
 	template<CONTAINER Tup, typename Pivot_T, typename ... Ts, COMPARE Cmp_T>
 	struct sort<Tup<Pivot_T, Ts...>, Cmp_T> : concat<std::tuple<
-		sort_t<filter_t<Tup<Ts...>, cmp::to_<Pivot_T, Cmp_T>::template negated>, Cmp_T>, Tup<Pivot_T>, // not less than
+		sort_t<filter_t<Tup<Ts...>, cmp::to_<Pivot_T, Cmp_T>::template inverse>, Cmp_T>, Tup<Pivot_T>, // not less than
 		sort_t<filter_t<Tup<Ts...>, cmp::to_<Pivot_T, Cmp_T>::template type>, Cmp_T>>> // less than
 	{ };
 
@@ -229,7 +258,7 @@ namespace util {
 
 	template<CONTAINER Tup, typename T, typename ... Ts, COMPARE Same_T>
 	struct unique<Tup<T, Ts...>, Same_T> : concat<std::tuple<Tup<T>, typename unique<filter_t<std::tuple<Ts...>,
-		cmp::to_<T, Same_T>::template negated>, Same_T>::type>>
+		cmp::to_<T, Same_T>::template inverse>, Same_T>::type>>
 	{ };
 
 	template<CONTAINER Tup, COMPARE Same_T>
@@ -248,6 +277,7 @@ namespace util {
 
 	template<COMPARE Same_T, COMPARE Priority_T>
 	struct unique_priority_ { template<typename Tup> using type = unique_priority<Tup, Same_T, Priority_T>; };
+
 
 
 	// TODO integrate unique into set_union
@@ -279,16 +309,21 @@ namespace util {
 	>::template type> { };
 
 	template<COMPARE Same_T, typename Set_T>
-	struct set_intersect_ { template<typename Tup> using type = set_intersect<Tup, Set_T, Same_T>; };
-
+	struct set_intersect_ {
+		template<typename Tup> using type = set_intersect<Tup, Set_T, Same_T>;
+		template<typename Tup> using inverse = set_intersect<Tup, Set_T, cmp::negate_<Same_T>::template type>;
+	};
 }
 
 // [ ] subset - pred set
 namespace util::pred {
-	template<typename SubSet_T, typename SuperSet_T, COMPARE Cmp_T=std::is_same>
-	struct is_subset : allof<SubSet_T, element_of_<SuperSet_T, Cmp_T>::template type> { };
-	template<typename SubSet_T, typename SuperSet_T, COMPARE Cmp_T=std::is_same>
-	static constexpr bool is_subset_v = is_subset<SubSet_T, SuperSet_T, Cmp_T>::value;
-	template<typename SuperSet_T, COMPARE Cmp_T=std::is_same>
-	struct is_subset_ { template<typename SubSet_T> using type = is_subset<SubSet_T, SuperSet_T, Cmp_T>; };
+	template<typename SubSet_T, typename SuperSet_T, COMPARE Same_T=std::is_same>
+	struct is_subset : allof<SubSet_T, element_of_<SuperSet_T, Same_T>::template type> { };
+	template<typename SubSet_T, typename SuperSet_T, COMPARE Same_T=std::is_same>
+	static constexpr bool is_subset_v = is_subset<SubSet_T, SuperSet_T, Same_T>::value;
+	template<typename SuperSet_T, COMPARE Same_T=std::is_same>
+	struct is_subset_ {
+		template<typename SubSet_T> using type = is_subset<SubSet_T, SuperSet_T, Same_T>;
+		template<typename SubSet_T> using inverse = std::negation<type>;
+	};
 }

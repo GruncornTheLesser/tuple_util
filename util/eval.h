@@ -40,7 +40,7 @@ namespace util {
 	struct eval_if_
 	{
 		template<typename T> using type = eval_if<T, Pred_T, If_T, Else_T>;
-		template<typename T> using negated = eval_if<T, pred::negate_<Pred_T>::template type, If_T, Else_T>;
+		template<typename T> using inverse = eval_if<T, pred::negate_<Pred_T>::template type, If_T, Else_T>;
 	};
 
 
@@ -59,7 +59,10 @@ namespace util {
 	struct post_eval_if<T, Trans_T, Pred_T, If_T, Else_T, std::enable_if_t<!Pred_T<T>::value>> { using type = typename Else_T<typename Trans_T<T>::type>::type; };
 
 	template<TRANSFORM Trans_T, PREDICATE Pred_T, TRANSFORM If_T, TRANSFORM Else_T = eval_<>::type>
-	struct post_eval_if_ { template<typename T> using type = post_eval_if<T, Trans_T, Pred_T, If_T, Else_T>; };
+	struct post_eval_if_ { 
+		template<typename T> using type = post_eval_if<T, Trans_T, Pred_T, If_T, Else_T>;
+		template<typename T> using inverse = post_eval_if<T, Trans_T, Pred_T, Else_T, If_T>;
+	};
 
 
 
