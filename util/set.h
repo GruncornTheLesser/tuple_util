@@ -324,6 +324,6 @@ namespace util::pred {
 	template<typename SuperSet_T, COMPARE Same_T=std::is_same>
 	struct is_subset_ {
 		template<typename SubSet_T> using type = is_subset<SubSet_T, SuperSet_T, Same_T>;
-		template<typename SubSet_T> using inverse = std::negation<type>;
+		template<typename SubSet_T> using inverse = std::negation<type<SubSet_T>>;
 	};
 }
