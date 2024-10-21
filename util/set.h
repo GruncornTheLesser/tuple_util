@@ -17,6 +17,9 @@ namespace util {
 	template<CONTAINER Set_T, CONTAINER Tup, typename ... Ts>
 	struct concat<Set_T<Tup<Ts...>>> : std::type_identity<Tup<Ts...>> { };
 
+	template<CONTAINER Set_T>
+	struct concat<Set_T<>> : std::type_identity<Set_T<>> { };
+
 
 
 	template<typename Tup>
@@ -136,26 +139,23 @@ namespace util {
 
 
 
-	template<typename Tup, PREDICATE Pred_T, int index=0, typename=void>
-	struct find : copy_cvref<typename find<std::remove_cvref_t<Tup>, Pred_T, index>::type, Tup> { };
+	template<typename Tup, PREDICATE Pred_T, unsigned int I=0, typename=std::void_t<>>
+	struct find : copy_cvref<typename find<std::remove_cv_t<Tup>, Pred_T, I>::type, Tup> { };
 
 	template<typename Tup, PREDICATE Pred_T>
 	using find_t = typename find<Tup, Pred_T>::type;
 
 	template<typename Tup, PREDICATE Pred_T>
-	static constexpr int find_v = find<Tup, Pred_T>::value;
+	static constexpr unsigned int find_v = find<Tup, Pred_T>::value;
 
-	template<CONTAINER Tup, typename T, typename ... Ts, PREDICATE Pred_T, int index>
-	struct find<Tup<T, Ts...>, Pred_T, index, std::enable_if_t<Pred_T<T>::value>>
-	 : std::type_identity<T> { static constexpr int value = index; };
+	template<CONTAINER Tup, typename T, typename ... Ts, PREDICATE Pred_T, unsigned int I>
+	struct find<Tup<T, Ts...>, Pred_T, I, std::enable_if_t<Pred_T<T>::value>> : std::type_identity<T>, std::integral_constant<unsigned int, I> { };
 
-	template<CONTAINER Tup, typename T, typename ... Ts, PREDICATE Pred_T, int index>
-	struct find<Tup<T, Ts...>, Pred_T, index, std::enable_if_t<!Pred_T<T>::value>>
-	 : find<Tup<Ts...>, Pred_T, index + 1> { };
+	template<CONTAINER Tup, typename T, typename ... Ts, PREDICATE Pred_T, unsigned int I>
+	struct find<Tup<T, Ts...>, Pred_T, I, std::enable_if_t<!Pred_T<T>::value>> : find<Tup<Ts...>, Pred_T, I + 1> { };
 
-	template<CONTAINER Tup, PREDICATE Pred_T, int index>
-	struct find<Tup<>, Pred_T, index, void>
-	 : std::type_identity<void> { };
+	template<CONTAINER Tup, PREDICATE Pred_T, unsigned int I>
+	struct find<Tup<>, Pred_T, I, void> : std::type_identity<void>, std::integral_constant<unsigned int, I> { };
 
 	template<PREDICATE Pred_T>
 	struct find_ { template<typename Tup> using type = find<Tup, Pred_T>; };
@@ -247,6 +247,15 @@ namespace util {
 
 	template<COMPARE LT_T>
 	struct sort_ { template<typename Tup> using type = sort<Tup, LT_T>; };
+
+	template<typename Tup, ATTRIBUTER ... Get_Ts>
+	using sort_by = sort<Tup, cmp::attrib_<Get_Ts...>::template type>;
+
+	template<typename Tup, ATTRIBUTER ... Get_Ts>
+	using sort_by_t = typename sort<Tup, cmp::attrib_<Get_Ts...>::template type>::type;
+
+	template<ATTRIBUTER ... Get_Ts>
+	using sort_by_ = sort_<cmp::attrib_<Get_Ts...>::template type>;
 
 
 

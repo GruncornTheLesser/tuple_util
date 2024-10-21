@@ -91,7 +91,6 @@ namespace util {
 	struct eval_split_ { template<typename T> using type = eval_split<T, Trans_Ts...>; };
 
 
-
 	// TODO wrappers with specializations per type
 	// not entirely convinced this would work but like ??? might be fun to try
 	// or perhaps I could reconfigure everything else into this
@@ -111,7 +110,9 @@ namespace util {
 
 	};
 	*/
-	template<CONTAINER Trans_T, typename ... Arg_Ts>
+	template<CONTAINER Trans_T, typename arg_T>
 	struct add_arg_
-	{ template<typename ... Ts> using type = Trans_T<Ts..., Arg_Ts...>; };
+	{ 
+		template<typename ... Ts> using type = Trans_T<Ts..., arg_T>; 
+	};
 }
