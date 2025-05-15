@@ -18,7 +18,7 @@ namespace util::cmp {
 	template<COMPARE ... Cmp_Ts>
 	struct disj_ {
 		template<typename LHS_T, typename RHS_T> using type = std::disjunction<Cmp_Ts<LHS_T, RHS_T>...>;
-		template<typename LHS_T, typename RHS_T> using inverse = std::negation<type<LHS_T, RHS_T>>;
+		template<typename LHS_T, typename RHS_T> using inv =  std::negation<type<LHS_T, RHS_T>>;
 	};
 
 
@@ -31,14 +31,14 @@ namespace util::cmp {
 	template<COMPARE ... Cmp_Ts>
 	struct conj_ {
 		template<typename LHS_T, typename RHS_T> using type = std::conjunction<Cmp_Ts<LHS_T, RHS_T>...>;
-		template<typename LHS_T, typename RHS_T> using inverse = std::negation<type<LHS_T, RHS_T>>;
+		template<typename LHS_T, typename RHS_T> using inv =  std::negation<type<LHS_T, RHS_T>>;
 	};
 
 	template<typename LHS_T, COMPARE Cmp_T=std::is_same, TRANSFORM Trans_T=std::type_identity>
 	struct to_
 	{
 		template<typename RHS_T> using type = Cmp_T<LHS_T, typename Trans_T<RHS_T>::type>;
-		template<typename RHS_T> using inverse = std::negation<type<RHS_T>>;
+		template<typename RHS_T> using inv =  std::negation<type<RHS_T>>;
 	};
 }
 
@@ -59,7 +59,7 @@ namespace util::cmp {
 	template<ATTRIBUTER Attributer_T=get_value>
 	struct lt_ { 
 		template<typename LHS, typename RHS> using type = cmp::lt<LHS, RHS, Attributer_T>;
-		template<typename LHS, typename RHS> using inverse = cmp::lt<RHS, LHS, Attributer_T>;
+		template<typename LHS, typename RHS> using inv =  cmp::lt<RHS, LHS, Attributer_T>;
 	};
 
 	template<typename LHS, typename RHS, ATTRIBUTER Attributer_T=get_value>
@@ -71,7 +71,7 @@ namespace util::cmp {
 	template<ATTRIBUTER Attributer_T=get_value>
 	struct lt_eq_ { 
 		template<typename LHS, typename RHS> using type = cmp::lt_eq<LHS, RHS, Attributer_T>;
-		template<typename LHS, typename RHS> using inverse = cmp::lt_eq<RHS, LHS, Attributer_T>;
+		template<typename LHS, typename RHS> using inv =  cmp::lt_eq<RHS, LHS, Attributer_T>;
 	};
 
 	template<typename LHS, typename RHS, ATTRIBUTER Attributer_T=get_value>
@@ -83,7 +83,7 @@ namespace util::cmp {
 	template<ATTRIBUTER Attributer_T=get_value>
 	struct gt_ { 
 		template<typename LHS, typename RHS> using type = cmp::gt<LHS, RHS, Attributer_T>;
-		template<typename LHS, typename RHS> using inverse = cmp::gt<RHS, LHS, Attributer_T>;
+		template<typename LHS, typename RHS> using inv =  cmp::gt<RHS, LHS, Attributer_T>;
 	};
 
 	template<typename LHS, typename RHS, ATTRIBUTER Attributer_T=get_value>
@@ -95,7 +95,7 @@ namespace util::cmp {
 	template<ATTRIBUTER Attributer_T=get_value>
 	struct gt_eq_ { 
 		template<typename LHS, typename RHS> using type = cmp::gt_eq<LHS, RHS, Attributer_T>;
-		template<typename LHS, typename RHS> using inverse = cmp::gt_eq<RHS, LHS, Attributer_T>; 
+		template<typename LHS, typename RHS> using inv =  cmp::gt_eq<RHS, LHS, Attributer_T>; 
 	};
 
 	template<typename LHS, typename RHS, ATTRIBUTER Attributer_T=get_value>
@@ -107,7 +107,7 @@ namespace util::cmp {
 	template<ATTRIBUTER Attributer_T=get_value>
 	struct eq_ { 
 		template<typename LHS, typename RHS> using type = cmp::eq<LHS, RHS, Attributer_T>;
-		template<typename LHS, typename RHS> using inverse = cmp::eq<RHS, LHS, Attributer_T>;
+		template<typename LHS, typename RHS> using inv =  cmp::eq<RHS, LHS, Attributer_T>;
 	};
 
 	template<typename LHS, typename RHS, ATTRIBUTER Attributer_T=get_value>
@@ -150,7 +150,7 @@ namespace util::cmp {
 	template<COMPARE Cmp_T, TRANSFORM LHS_Trans_T, TRANSFORM RHS_Trans_T=LHS_Trans_T>
 	struct lhs_rhs_ {
 		template<typename LHS_T, typename RHS_T> using type = cmp::lhs_rhs<LHS_T, RHS_T, Cmp_T, LHS_Trans_T, RHS_Trans_T>;
-		template<typename LHS_T, typename RHS_T> using inverse = std::negation<type<LHS_T, RHS_T>>;
+		template<typename LHS_T, typename RHS_T> using inv =  std::negation<type<LHS_T, RHS_T>>;
 	};
 
 	template<typename LHS_T, typename RHS_T, COMPARE Cmp_T, TRANSFORM LHS_Trans_T, TRANSFORM RHS_Trans_T=LHS_Trans_T>

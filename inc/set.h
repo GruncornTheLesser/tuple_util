@@ -1,10 +1,68 @@
 #pragma once
 #include "macro.h"
-#include "compare.h"
 #include "predicate.h"
-#include "decorators.h"
+#include "compare.h"
+#include <array>
+#include <algorithm>
 
 namespace util {
+	template<typename Tup> 
+	struct arg_count;
+
+	template<typename Tup> 
+	static constexpr std::size_t arg_count_v = arg_count<Tup>::value;
+
+	template<CONTAINER Tup, typename ... Ts> 
+	struct arg_count<Tup<Ts...>> { static constexpr std::size_t value = sizeof...(Ts); };
+
+
+	
+	template<std::size_t N, typename Tup> 
+	struct arg_element;
+
+	template<std::size_t N, typename Tup> 
+	using arg_element_t = typename arg_element<N, Tup>::type;
+
+	template<std::size_t N, CONTAINER Tp, typename T, typename ... Ts>
+	struct arg_element<N, Tp<T, Ts...>> : arg_element<N - 1u, Tp<Ts...>> { };
+
+	template<CONTAINER Tp, typename T, typename ... Ts>
+	struct arg_element<0, Tp<T, Ts...>> : std::type_identity<T> { };
+
+	
+
+	template<typename Tup, typename Ind>
+	struct subset;
+
+	template<typename Tup, typename Ind>
+	using subset_t = typename subset<Tup, Ind>::type;
+
+	template<CONTAINER Tup, typename ... Ts, std::size_t ... Is>
+	struct subset<Tup<Ts...>, std::index_sequence<Is...>> {
+		using type = Tup<arg_element_t<Is, Tup<Ts...>>...>;
+	};
+
+
+
+	namespace details {
+		template<auto arr, typename Ind>
+		struct index_sequence_from;
+		
+		template<auto arr, std::size_t ... Is>
+		struct index_sequence_from<arr, std::index_sequence<Is...>> {
+			using type = std::index_sequence<arr[Is]...>;
+		};
+	}
+
+	template<auto arr, std::size_t N=arr.size()>
+	using index_sequence_from = details::index_sequence_from<arr, std::make_index_sequence<N>>;
+
+	template<auto arr, std::size_t N=arr.size()>
+	using index_sequence_from_t = typename index_sequence_from<arr, N>::type;
+
+	
+
+
 	template<typename Tup>
 	struct concat;
 
@@ -21,26 +79,31 @@ namespace util {
 	struct concat<Set_T<>> : std::type_identity<Set_T<>> { };
 
 
+	
+	namespace details {
+		template<typename Tup, typename Ind = std::make_index_sequence<arg_count_v<Tup>>>
+		struct reverse;
 
+		template<CONTAINER Tup, typename ... Ts, std::size_t ... Is>
+		struct reverse<Tup<Ts...>, std::index_sequence<Is...>>{ 
+			using type = Tup<arg_element_t<arg_count_v<Tup<Ts...>> - Is - 1, Tup<Ts...>>...>; 
+		};
+	}
+	
 	template<typename Tup>
-	struct reverse;
+	using reverse = details::reverse<Tup>;
 
 	template<typename Tup>
 	using reverse_t = typename reverse<Tup>::type;
-
-	template<CONTAINER Tup, typename ... Ts, typename T>
-	struct reverse<Tup<Ts..., T>> : concat<std::tuple<Tup<T>, typename reverse<Ts...>::type>> { };
-
-	template<CONTAINER Tup>
-	struct reverse<Tup<>> : std::type_identity<Tup<>> { };
 
 
 
 	template<typename Tup, typename T>
 	using append = concat<std::tuple<Tup, std::tuple<T>>>;
 
-	template<typename T> struct append_
-	{ template<typename Tup> using type = append<Tup, T>; };
+	template<typename T> struct append_ { 
+		template<typename Tup> using type = append<Tup, T>; 
+	};
 
 	template<typename Tup, typename T>
 	using append_t = typename append<Tup, T>::type;
@@ -50,8 +113,9 @@ namespace util {
 	template<typename Tup, typename T>
 	using prepend = concat<std::tuple<std::tuple<T>, Tup>>;
 
-	template<typename T> struct prepend_
-	{ template<typename Tup> using type = prepend<Tup, T>; };
+	template<typename T> struct prepend_ { 
+		template<typename Tup> using type = prepend<Tup, T>; 
+	};
 
 	template<typename Tup, typename T>
 	using prepend_t = typename prepend<Tup, T>::type;
@@ -59,7 +123,7 @@ namespace util {
 
 
 	template<typename Tup>
-	struct pop_front : copy_cvref<typename pop_front<std::remove_cvref_t<Tup>>::type, Tup> { };
+	struct pop_front;
 
 	template<CONTAINER Tup, typename T, typename ... Ts>
 	struct pop_front<Tup<T, Ts...>> { using type = Tup<Ts...>; };
@@ -73,7 +137,7 @@ namespace util {
 
 
 	template<typename Tup>
-	struct pop_back : copy_cvref<typename pop_back<std::remove_cvref_t<Tup>>::type, Tup> { };
+	struct pop_back;
 
 	template<CONTAINER Tup, typename T>
 	struct pop_back<Tup<T>> { using type = std::tuple<>; };
@@ -119,124 +183,115 @@ namespace util {
 	using get_back_t = typename get_back<Tup>::type;
 
 
+	namespace details {
+		template<typename Tup, PREDICATE Pred_Tp, typename Ind>
+		struct filter;
 
-	template<typename Tup, PREDICATE Pred_T>
-	struct filter : copy_cvref<typename filter<std::remove_cvref_t<Tup>, Pred_T>::type, Tup> { };
+		template<CONTAINER Tup, typename ... Ts, PREDICATE Pred_Tp, std::size_t ... Is>
+		struct filter<Tup<Ts...>, Pred_Tp, std::index_sequence<Is...>> {
+		private:
+			static constexpr std::pair<std::array<std::size_t, sizeof...(Ts)>, std::size_t> subrange = []{
+				std::array<std::size_t, sizeof...(Ts)> indices { Is... };
+				std::array<bool, sizeof...(Ts)> values { Pred_Tp<Ts>::value... };
+				return std::pair{ indices, std::remove_if(indices.begin(), indices.end(), 
+					[&](std::size_t i) { return values[i]; }) - indices.begin() 
+				};
+			}();
+		public:
+			using type = subset_t<Tup<Ts...>, index_sequence_from_t<subrange.first, subrange.second>>;
+		};
+	}
 
-	template<typename Tup, PREDICATE Pred_T>
-	using filter_t = typename filter<Tup, Pred_T>::type;
+	template<typename Tup, PREDICATE Pred_Tp>
+	using filter = details::filter<Tup, Pred_Tp, std::make_index_sequence<arg_count_v<Tup>>>;
 
-	template<CONTAINER Tup, typename ... Ts, PREDICATE Pred_T>
-	struct filter<Tup<Ts...>, Pred_T>
-	 : concat<std::tuple<Tup<>, std::conditional_t<Pred_T<Ts>::value, Tup<Ts>, Tup<>>...>> { };
-
-	template<PREDICATE Pred_T>
-	struct filter_
-	{ 
-		template<typename Tup> using type = filter<Tup, Pred_T>;
-		template<typename Tup> using inverse = filter<Tup, util::pred::negate_<Pred_T>::template type>;
+	template<PREDICATE Pred_Tp>
+	struct filter_ { 
+		template<typename Tup> using type = filter<Tup, Pred_Tp>;
+		template<typename Tup> using inv =  filter<Tup, util::pred::negate_<Pred_Tp>::template type>;
 	};
 
 
 
-	template<typename Tup, PREDICATE Pred_T, unsigned int I=0, typename=std::void_t<>>
-	struct find : copy_cvref<typename find<std::remove_cv_t<Tup>, Pred_T, I>::type, Tup> { };
-
-	template<typename Tup, PREDICATE Pred_T>
-	using find_t = typename find<Tup, Pred_T>::type;
-
-	template<typename Tup, PREDICATE Pred_T>
-	static constexpr unsigned int find_v = find<Tup, Pred_T>::value;
-
-	template<CONTAINER Tup, typename T, typename ... Ts, PREDICATE Pred_T, unsigned int I>
-	struct find<Tup<T, Ts...>, Pred_T, I, std::enable_if_t<Pred_T<T>::value>> : std::type_identity<T>, std::integral_constant<unsigned int, I> { };
-
-	template<CONTAINER Tup, typename T, typename ... Ts, PREDICATE Pred_T, unsigned int I>
-	struct find<Tup<T, Ts...>, Pred_T, I, std::enable_if_t<!Pred_T<T>::value>> : find<Tup<Ts...>, Pred_T, I + 1> { };
-
-	template<CONTAINER Tup, PREDICATE Pred_T, unsigned int I>
-	struct find<Tup<>, Pred_T, I, void> : std::type_identity<void>, std::integral_constant<unsigned int, I> { };
-
-	template<PREDICATE Pred_T>
-	struct find_ { template<typename Tup> using type = find<Tup, Pred_T>; };
+	template<typename Tup, PREDICATE Pred_Tp>
+	using filter_t = typename filter<Tup, Pred_Tp>::type;
 
 
 
-	template<typename Tup, COMPARE Cmp_T, typename=void>
-	struct find_most : copy_cvref<typename find_most<std::remove_cvref_t<Tup>, Cmp_T>::type, Tup> { };
+	template<typename Tup, PREDICATE Pred_Tp>
+	struct find;
 
-	template<typename Tup, COMPARE Cmp_T, typename=void>
-	using find_most_t = typename find_most<Tup, Cmp_T>::type;
+	template<CONTAINER Tup, typename ... Ts, PREDICATE Pred_Tp>
+	struct find<Tup<Ts...>, Pred_Tp> { 
+	private:
+		static constexpr std::array<bool, sizeof...(Ts)> values { Pred_Tp<Ts>::value... };
+	public:
+		static constexpr std::size_t value = std::find(values.begin(), values.end(), true) - values.begin();
+		using type = arg_element<value, Tup<Ts...>>;
+	};
+	
+	template<PREDICATE Pred_Tp>
+	struct find_ { template<typename Tup> using type = find<Tup, Pred_Tp>; };
+	
+	template<typename Tup, PREDICATE Pred_Tp>
+	using find_t = typename find<Tup, Pred_Tp>::type;
 
-	template<CONTAINER Tup, typename T1, typename T2, typename ... Ts, COMPARE Cmp_T>
-	struct find_most<Tup<T1, T2, Ts...>, Cmp_T, std::enable_if_t<Cmp_T<T1, T2>::value>>
-	 : find_most<Tup<T2, Ts...>, Cmp_T> { };
-
-	template<CONTAINER Tup, typename T1, typename T2, typename ... Ts, COMPARE Cmp_T>
-	struct find_most<Tup<T1, T2, Ts...>, Cmp_T, std::enable_if_t<!Cmp_T<T1, T2>::value>>
-	 : find_most<Tup<T1, Ts...>, Cmp_T> { };
-
-	template<CONTAINER Tup, typename T, COMPARE Cmp_T>
-	struct find_most<Tup<T>, Cmp_T> : std::type_identity<T> { };
-
-	template<COMPARE Cmp_T>
-	struct find_most_ { template<typename Tup> using type = find_most<Tup, Cmp_T>; };
-
-
-
-	template<typename Tup, TRANSFORM Get_T, typename=void>
-	struct find_min : copy_cvref<typename find_min<std::remove_cvref_t<Tup>, Get_T>::type, Tup> { };
-
-	template<typename Tup, TRANSFORM Get_T, typename=void>
-	using find_min_t = typename find_min<Tup, Get_T>::type;
-
-	template<CONTAINER Tup, typename T1, typename T2, typename ... Ts, TRANSFORM Get_T>
-	struct find_min<Tup<T1, T2, Ts...>, Get_T, std::enable_if_t<(Get_T<T1>::value > Get_T<T2>::value)>>
-	 : find_min<Tup<T2, Ts...>, Get_T> { };
-
-	template<CONTAINER Tup, typename T1, typename T2, typename ... Ts, TRANSFORM Get_T>
-	struct find_min<Tup<T1, T2, Ts...>, Get_T, std::enable_if_t<(Get_T<T1>::value <= Get_T<T2>::value)>>
-	 : find_min<Tup<T1, Ts...>, Get_T> { };
-
-	template<CONTAINER Tup, typename T, TRANSFORM Get_T>
-	struct find_min<Tup<T>, Get_T> : std::type_identity<T> { };
-
-	template<TRANSFORM Get_T>
-	struct find_min_ { template<typename Tup> using type = find_min<Tup, Get_T>; };
+	template<typename Tup, PREDICATE Pred_Tp>
+	static constexpr unsigned int find_v = find<Tup, Pred_Tp>::value;
 
 
 
-	template<typename Tup, TRANSFORM Get_T, typename=void>
-	struct find_max : copy_cvref<typename find_max<std::remove_cvref_t<Tup>, Get_T>::type, Tup> { };
 
-	template<typename Tup, TRANSFORM Get_T, typename=void>
-	using find_max_t = typename find_max<Tup, Get_T>::type;
+	template<typename Tup, ATTRIBUTER Get_Tp>
+	struct find_min;
 
-	template<CONTAINER Tup, typename T1, typename T2, typename ... Ts, TRANSFORM Get_T>
-	struct find_max<Tup<T1, T2, Ts...>, Get_T, std::enable_if_t<(Get_T<T1>::value < Get_T<T2>::value)>>
-	 : find_max<Tup<T2, Ts...>, Get_T> { };
+	template<ATTRIBUTER Get_Tp>
+	struct find_min_ { template<typename Tup> using type = find_min<Tup, Get_Tp>; };
 
-	template<CONTAINER Tup, typename T1, typename T2, typename ... Ts, TRANSFORM Get_T>
-	struct find_max<Tup<T1, T2, Ts...>, Get_T, std::enable_if_t<(Get_T<T1>::value >= Get_T<T2>::value)>>
-	 : find_max<Tup<T1, Ts...>, Get_T> { };
+	template<typename Tup, ATTRIBUTER Get_Tp>
+	using find_min_t = typename find_min<Tup, Get_Tp>::type;
 
-	template<CONTAINER Tup, typename T, TRANSFORM Get_T>
-	struct find_max<Tup<T>, Get_T> : std::type_identity<T> { };
+	template<CONTAINER Tup, typename ... Ts, ATTRIBUTER Get_Tp>
+	struct find_min<Tup<Ts...>, Get_Tp> {
+	private:
+		using value_type = decltype(Get_Tp<std::tuple_element_t<0, std::tuple<Ts...>>>::value);
+		static constexpr std::array<value_type, sizeof...(Ts)> values { Get_Tp<Ts>::value... };
+	public:
+		static constexpr std::size_t value = std::ranges::min_element(values) - values.begin();
+	};
 
-	template<TRANSFORM Get_T>
-	struct find_max_ { template<typename Tup> using type = find_max<Tup, Get_T>; };
+
+
+	template<typename Tup, ATTRIBUTER Get_Tp>
+	struct find_max;
+
+	template<ATTRIBUTER Get_Tp>
+	struct find_max_ { template<typename Tup> using type = find_max<Tup, Get_Tp>; };
+
+	template<typename Tup, ATTRIBUTER Get_Tp>
+	using find_max_t = typename find_max<Tup, Get_Tp>::type;
+
+	template<CONTAINER Tup, typename ... Ts, ATTRIBUTER Get_Tp>
+	struct find_max<Tup<Ts...>, Get_Tp> {
+	private:
+		using value_type = decltype(Get_Tp<std::tuple_element_t<0, std::tuple<Ts...>>>::value);
+		static constexpr std::array<value_type, sizeof...(Ts)> values { Get_Tp<Ts>::value... };
+	public:
+		static constexpr std::size_t value = std::ranges::max_element(values) - values.begin();
+	};
+	
 
 
 
 	template<typename Tup, COMPARE LT_T>
-	struct sort : copy_cvref<typename sort<std::remove_cvref_t<Tup>, LT_T>::type, Tup> { };
+	struct sort;
 
 	template<typename Tup, COMPARE LT_T>
 	using sort_t = typename sort<Tup, LT_T>::type;
 
 	template<CONTAINER Tup, typename Pivot_T, typename ... Ts, COMPARE Cmp_T>
 	struct sort<Tup<Pivot_T, Ts...>, Cmp_T> : concat<std::tuple<
-		sort_t<filter_t<Tup<Ts...>, cmp::to_<Pivot_T, Cmp_T>::template inverse>, Cmp_T>, Tup<Pivot_T>, // not less than
+		sort_t<filter_t<Tup<Ts...>, cmp::to_<Pivot_T, Cmp_T>::template inv>, Cmp_T>, Tup<Pivot_T>, // not less than
 		sort_t<filter_t<Tup<Ts...>, cmp::to_<Pivot_T, Cmp_T>::template type>, Cmp_T>>> // less than
 	{ };
 
@@ -260,14 +315,14 @@ namespace util {
 
 
 	template<typename Tup, COMPARE Same_T=std::is_same>
-	struct unique : copy_cvref<typename unique<std::remove_cvref_t<Tup>, Same_T>::type, Tup> { };
+	struct unique;
 
 	template<typename Tup, COMPARE Same_T=std::is_same>
 	using unique_t = typename unique<Tup, Same_T>::type;
 
 	template<CONTAINER Tup, typename T, typename ... Ts, COMPARE Same_T>
-	struct unique<Tup<T, Ts...>, Same_T> : concat<std::tuple<Tup<T>, typename unique<filter_t<std::tuple<Ts...>,
-		cmp::to_<T, Same_T>::template inverse>, Same_T>::type>>
+	struct unique<Tup<T, Ts...>, Same_T> : concat<std::tuple<Tup<T>, typename unique<
+		filter_t<std::tuple<Ts...>, cmp::to_<T, Same_T>::template inv>, Same_T>::type>>
 	{ };
 
 	template<CONTAINER Tup, COMPARE Same_T>
@@ -320,7 +375,7 @@ namespace util {
 	template<COMPARE Same_T, typename Set_T>
 	struct set_intersect_ {
 		template<typename Tup> using type = set_intersect<Tup, Set_T, Same_T>;
-		template<typename Tup> using inverse = set_intersect<Tup, Set_T, cmp::negate_<Same_T>::template type>;
+		template<typename Tup> using inv =  set_intersect<Tup, Set_T, cmp::negate_<Same_T>::template type>;
 	};
 }
 
@@ -333,6 +388,6 @@ namespace util::pred {
 	template<typename SuperSet_T, COMPARE Same_T=std::is_same>
 	struct is_subset_ {
 		template<typename SubSet_T> using type = is_subset<SubSet_T, SuperSet_T, Same_T>;
-		template<typename SubSet_T> using inverse = std::negation<type<SubSet_T>>;
+		template<typename SubSet_T> using inv =  std::negation<type<SubSet_T>>;
 	};
 }

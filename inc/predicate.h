@@ -1,6 +1,5 @@
 #pragma once
 #include "macro.h"
-#include "compare.h"
 
 namespace util::pred {
 	template<PREDICATE Pred_T>
@@ -14,7 +13,7 @@ namespace util::pred {
 	template<PREDICATE ... Pred_Ts>
 	struct disj_ {
 		template<typename T> using type = std::disjunction<Pred_Ts<T>...>;
-		template<typename T> using inverse = std::negation<type<T>>;
+		template<typename T> using inv =  std::negation<type<T>>;
 	};
 
 	template<typename T, PREDICATE ... Pred_Ts>
@@ -26,7 +25,7 @@ namespace util::pred {
 	template<PREDICATE ... Pred_Ts>
 	struct conj_ {
 		template<typename T> using type = std::conjunction<Pred_Ts<T>...>;
-		template<typename T> using inverse = std::negation<type<T>>;
+		template<typename T> using inv =  std::negation<type<T>>;
 	};
 
 	template<typename T, PREDICATE ... Pred_Ts>
@@ -41,7 +40,7 @@ namespace util::pred {
 	template<PREDICATE Pred_T>
 	struct anyof_ { 
 		template<typename Tup> using type = anyof<Tup, Pred_T>;
-		template<typename T> using inverse = std::negation<type<T>>;
+		template<typename T> using inv =  std::negation<type<T>>;
 	};
 
 	template<typename Tup, PREDICATE Pred_T>
@@ -56,7 +55,7 @@ namespace util::pred {
 	template<PREDICATE Pred_T>
 	struct allof_ { 
 		template<typename Tup> using type = allof<Tup, Pred_T>;
-		template<typename T> using inverse = std::negation<type<T>>;
+		template<typename Tup> using inv =  std::negation<type<Tup>>;
 	};
 
 	template<typename Tup, PREDICATE Pred_T>
@@ -72,7 +71,7 @@ namespace util::pred {
 
 	template<PREDICATE Pred_T, TRANSFORM Trans_T> struct evaled_ {
 		template<typename T> using type = Pred_T<typename evaled<T, Pred_T, Trans_T>::type>;
-		template<typename T> using inverse = std::negation<type<T>>; 
+		template<typename T> using inv =  std::negation<type<T>>; 
 	};
 }
 
@@ -87,13 +86,13 @@ namespace util::pred {
 	template<typename Tup, COMPARE Cmp_T = std::is_same>
 	struct element_of_ {
 		template<typename T> using type = element_of<T, Tup, Cmp_T>;
-		template<typename T> using inverse = std::negation<type<T>>;
+		template<typename T> using inv =  std::negation<type<T>>;
 	};
 
 	template<typename T, COMPARE Cmp_T = std::is_same>
 	struct contains_ {
 		template<typename Tup> using type = element_of<T, Tup>;
-		template<typename Tup> using inverse = std::negation<type<Tup>>;
+		template<typename Tup> using inv =  std::negation<type<Tup>>;
 	};
 
 	template<typename T, typename Tup, COMPARE Same_T = std::is_same>
