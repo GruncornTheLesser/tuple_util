@@ -1,7 +1,7 @@
 #pragma once
-#include "macro.h"
-#include "predicate.h"
-#include "compare.h"
+#include "util/macro.h"
+#include "util/predicate.h"
+#include "util/compare.h"
 #include <array>
 #include <algorithm>
 
