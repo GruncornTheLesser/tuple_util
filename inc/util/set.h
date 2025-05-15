@@ -194,7 +194,7 @@ namespace util {
 				std::array<std::size_t, sizeof...(Ts)> indices { Is... };
 				std::array<bool, sizeof...(Ts)> values { Pred_Tp<Ts>::value... };
 				return std::pair{ indices, std::remove_if(indices.begin(), indices.end(), 
-					[&](std::size_t i) { return values[i]; }) - indices.begin() 
+					[&](std::size_t i) { return !values[i]; }) - indices.begin() 
 				};
 			}();
 		public:
@@ -227,7 +227,7 @@ namespace util {
 		static constexpr std::array<bool, sizeof...(Ts)> values { Pred_Tp<Ts>::value... };
 	public:
 		static constexpr std::size_t value = std::find(values.begin(), values.end(), true) - values.begin();
-		using type = arg_element<value, Tup<Ts...>>;
+		using type = typename arg_element<value, Tup<Ts...>>::type;
 	};
 	
 	template<PREDICATE Pred_Tp>
@@ -291,8 +291,8 @@ namespace util {
 
 	template<CONTAINER Tup, typename Pivot_T, typename ... Ts, COMPARE Cmp_T>
 	struct sort<Tup<Pivot_T, Ts...>, Cmp_T> : concat<std::tuple<
-		sort_t<filter_t<Tup<Ts...>, cmp::to_<Pivot_T, Cmp_T>::template inv>, Cmp_T>, Tup<Pivot_T>, // not less than
-		sort_t<filter_t<Tup<Ts...>, cmp::to_<Pivot_T, Cmp_T>::template type>, Cmp_T>>> // less than
+		sort_t<filter_t<Tup<Ts...>, cmp::to_<Pivot_T, Cmp_T>::template type>, Cmp_T>, Tup<Pivot_T>, // not less than
+		sort_t<filter_t<Tup<Ts...>, cmp::to_<Pivot_T, Cmp_T>::template inv>, Cmp_T>>> // less than
 	{ };
 
 	template<CONTAINER Tup, COMPARE Cmp_T>
