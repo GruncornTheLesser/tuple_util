@@ -1,13 +1,6 @@
 #pragma once
 #include "util/macro.h"
-
-namespace util {
-	template<CONTAINER Pred_T, typename ... Ts>
-	struct pred_ {
-		template<typename T> using type = Pred_T<T, Ts...>;
-		template<typename T> using inv  = std::negation<Pred_T<T, Ts...>>;
-	};
-}
+#include <type_traits>
 
 namespace util::pred {
 	template<PREDICATE Pred_T>

@@ -1,5 +1,6 @@
 #pragma once
 #include "util/macro.h"
+#include <type_traits>
 
 namespace util {
 	template<typename T, CONTAINER Tup>
@@ -15,17 +16,19 @@ namespace util {
 
 	template<typename T, CONTAINER Tup>
 	struct wrap { using type = Tup<T>; };
+
 	template<CONTAINER Tup>
 	struct wrap_ { template<typename T> using type = wrap<T, Tup>; };
+
 	template<typename T, CONTAINER ... Tups>
 	using wrap_t = typename wrap<T, Tups...>::type;
 
 
 	template<typename T>
 	struct unwrap;
+
 	template<CONTAINER Tup, typename T>
-	struct unwrap<Tup<T>>
-	 : std::type_identity<T> { };
+	struct unwrap<Tup<T>> : std::type_identity<T> { };
 
 	template<typename T>
 	using unwrap_t = typename unwrap<T>::type;
@@ -46,9 +49,12 @@ namespace util::pred {
 
 
 
-	template <typename T, typename=void>
-	struct is_tuple : is_wrapped_by<std::remove_cv_t<T>, std::tuple> { };
+	template <typename T>
+	struct is_wrapped : std::false_type { };
+
+	template<template<typename...> typename Tp, typename ... Ts> 
+	struct is_wrapped<Tp<Ts...>> : std::true_type { };
 
 	template <typename T>
-	static constexpr bool is_tuple_v = is_tuple<T>::value;
+	static constexpr bool is_wrapped_v = is_wrapped<T>::value;
 }

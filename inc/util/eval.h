@@ -1,6 +1,7 @@
 #pragma once
 #include "util/macro.h"
 #include "util/predicate.h"
+#include <type_traits>
 
 // [ ] eval - transform
 namespace util {

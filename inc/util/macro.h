@@ -1,6 +1,4 @@
 #pragma once
-#include <tuple>
-#include <type_traits>
 #define ATTRIBUTER template<typename> typename // describes an attribute of a class. eg std::tuple_size
 #define TRANSFORM template<typename> typename // has 'type' eg std::add_const
 #define PREDICATE template<typename> typename // has bool 'value' eg std::is_const

@@ -18,18 +18,32 @@ namespace util {
 
 	
 	template<std::size_t N, typename Tup> 
-	struct arg_element;
+	struct arg_at;
 
 	template<std::size_t N, typename Tup> 
-	using arg_element_t = typename arg_element<N, Tup>::type;
+	using arg_at_t = typename arg_at<N, Tup>::type;
 
 	template<std::size_t N, CONTAINER Tp, typename T, typename ... Ts>
-	struct arg_element<N, Tp<T, Ts...>> : arg_element<N - 1u, Tp<Ts...>> { };
+	struct arg_at<N, Tp<T, Ts...>> : arg_at<N - 1u, Tp<Ts...>> { };
 
 	template<CONTAINER Tp, typename T, typename ... Ts>
-	struct arg_element<0, Tp<T, Ts...>> : std::type_identity<T> { };
+	struct arg_at<0, Tp<T, Ts...>> : std::type_identity<T> { };
 
 	
+	template<typename Tup>
+	using arg_front = arg_at<0, Tup>;
+
+	template<typename Tup>
+	using arg_front_t = typename arg_front<Tup>::type;
+
+
+	template<typename Tup>
+	using arg_back = arg_at<arg_count_v<Tup> - 1, Tup>;
+
+	template<typename Tup>
+	using arg_back_t = typename arg_back<Tup>::type;
+
+
 
 	template<typename Tup, typename Ind>
 	struct subset;
@@ -39,7 +53,7 @@ namespace util {
 
 	template<CONTAINER Tup, typename ... Ts, std::size_t ... Is>
 	struct subset<Tup<Ts...>, std::index_sequence<Is...>> {
-		using type = Tup<arg_element_t<Is, Tup<Ts...>>...>;
+		using type = Tup<arg_at_t<Is, Tup<Ts...>>...>;
 	};
 
 
@@ -86,7 +100,7 @@ namespace util {
 
 		template<CONTAINER Tup, typename ... Ts, std::size_t ... Is>
 		struct reverse<Tup<Ts...>, std::index_sequence<Is...>>{ 
-			using type = Tup<arg_element_t<arg_count_v<Tup<Ts...>> - Is - 1, Tup<Ts...>>...>; 
+			using type = Tup<arg_at_t<arg_count_v<Tup<Ts...>> - Is - 1, Tup<Ts...>>...>; 
 		};
 	}
 	
@@ -128,59 +142,17 @@ namespace util {
 	template<CONTAINER Tup, typename T, typename ... Ts>
 	struct pop_front<Tup<T, Ts...>> { using type = Tup<Ts...>; };
 	
-	template<CONTAINER Tup>
-	struct pop_front<Tup<>> : std::type_identity<void> { };
-
 	template<typename Tup>
 	using pop_front_t = typename pop_front<Tup>::type;
 
 
 
 	template<typename Tup>
-	struct pop_back;
-
-	template<CONTAINER Tup, typename T>
-	struct pop_back<Tup<T>> { using type = std::tuple<>; };
-
-	template<CONTAINER Tup, typename T, typename ... Ts>
-	struct pop_back<Tup<T, Ts...>> { using type = append<T, pop_back<Ts...>>; };
-
-	template<CONTAINER Tup>
-	struct pop_back<Tup<>> : std::type_identity<void> { };
+	struct pop_back : subset<Tup, std::make_index_sequence<arg_count_v<Tup> - 1>> { };
 
 	template<typename Tup>
 	using pop_back_t = typename pop_back<Tup>::type;
 
-
-
-	template<typename Tup>
-	struct get_front : get_front<std::remove_cvref_t<Tup>> { };
-
-	template<CONTAINER Tup, typename T, typename ... Ts>
-	struct get_front<Tup<T, Ts...>> { using type = T; };
-
-	template<CONTAINER Tup>
-	struct get_front<Tup<>> : std::type_identity<void> { };
-
-	template<typename Tup>
-	using get_front_t = typename get_front<Tup>::type;
-
-
-
-	template<typename Tup>
-	struct get_back : get_back<std::remove_cvref_t<Tup>> { };
-
-	template<CONTAINER Tup, typename T>
-	struct get_back<Tup<T>> { using type = T; };
-
-	template<CONTAINER Tup, typename ... Ts, typename T>
-	struct get_back<Tup<T, Ts...>> : get_back<Tup<Ts...>> { };
-	
-	template<CONTAINER Tup>
-	struct get_back<Tup<>> : std::type_identity<void> { };
-
-	template<typename Tup>
-	using get_back_t = typename get_back<Tup>::type;
 
 
 	namespace details {
@@ -227,7 +199,7 @@ namespace util {
 		static constexpr std::array<bool, sizeof...(Ts)> values { Pred_Tp<Ts>::value... };
 	public:
 		static constexpr std::size_t value = std::find(values.begin(), values.end(), true) - values.begin();
-		using type = typename arg_element<value, Tup<Ts...>>::type;
+		using type = typename arg_at<value, Tup<Ts...>>::type;
 	};
 	
 	template<PREDICATE Pred_Tp>
@@ -291,8 +263,8 @@ namespace util {
 
 	template<CONTAINER Tup, typename Pivot_T, typename ... Ts, COMPARE Cmp_T>
 	struct sort<Tup<Pivot_T, Ts...>, Cmp_T> : concat<std::tuple<
-		sort_t<filter_t<Tup<Ts...>, cmp::to_<Pivot_T, Cmp_T>::template type>, Cmp_T>, Tup<Pivot_T>, // not less than
-		sort_t<filter_t<Tup<Ts...>, cmp::to_<Pivot_T, Cmp_T>::template inv>, Cmp_T>>> // less than
+		sort_t<filter_t<Tup<Ts...>, cmp::to_<Pivot_T, Cmp_T>::template inv>,  Cmp_T>, Tup<Pivot_T>, // not less than
+		sort_t<filter_t<Tup<Ts...>, cmp::to_<Pivot_T, Cmp_T>::template type>, Cmp_T>>> 				// less than
 	{ };
 
 	template<CONTAINER Tup, COMPARE Cmp_T>

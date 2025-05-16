@@ -4,7 +4,7 @@
 namespace util::details { 
     template<typename Tup, typename Func_T, typename ... Arg_Ts, std::size_t ... Is> 
     inline constexpr decltype(auto) apply(Func_T&& func, std::index_sequence<Is...> ind, Arg_Ts&& ... args) {
-        return func.template operator()<arg_element_t<Is, Tup>...>();
+        return func.template operator()<arg_at_t<Is, Tup>...>();
     }
 }
 
