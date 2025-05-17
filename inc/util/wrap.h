@@ -11,10 +11,10 @@ namespace util {
 
 	template<typename T, CONTAINER Tup> using rewrap_t = typename rewrap<T, Tup>::type;
 
-	template<CONTAINER Tup1, typename ... Ts, CONTAINER Tup2>
+	template<CONTAINER Tup1, typename ... Ts, CONTAINER Tup2> requires requires { typename Tup2<Ts...>; }
 	struct rewrap<Tup1<Ts...>, Tup2> { using type = Tup2<Ts...>; };
 
-	template<typename T, CONTAINER Tup>
+	template<typename T, CONTAINER Tup> requires requires { typename Tup<T>; }
 	struct wrap { using type = Tup<T>; };
 
 	template<CONTAINER Tup>

@@ -42,7 +42,7 @@ namespace util::cmp {
 	template<typename LHS_T, typename RHS_T, COMPARE ... Cmp_Tps>
 	static constexpr bool conj_v = conj<LHS_T, RHS_T, Cmp_Tps...>::value;
 
-	template<typename LHS_T, COMPARE Cmp_Tp=std::is_same, TRANSFORM Trans_T=std::type_identity>
+	template<typename LHS_T, COMPARE Cmp_Tp=std::is_same, TRANSFORM Trans_T=std::type_identity> 
 	struct to_ {
 		template<typename RHS_T> using type = Cmp_Tp<LHS_T, typename Trans_T<RHS_T>::type>;
 		template<typename RHS_T> using inv =  std::negation<type<RHS_T>>;
@@ -164,7 +164,8 @@ namespace util::cmp {
 }
 
 namespace util::cmp::evaled {
-	template<typename LHS_T, typename RHS_T, COMPARE Cmp_Tp, TRANSFORM LHS_Trans_T, TRANSFORM RHS_Trans_T=LHS_Trans_T>
+	template<typename LHS_T, typename RHS_T, COMPARE Cmp_Tp, TRANSFORM LHS_Trans_T, TRANSFORM RHS_Trans_T=LHS_Trans_T> 
+		requires requires { typename LHS_Trans_T<LHS_T>::type; typename RHS_Trans_T<RHS_T>::type; }
 	struct lhs_rhs : Cmp_Tp<typename LHS_Trans_T<LHS_T>::type, typename RHS_Trans_T<RHS_T>::type> { };
 
 	template<COMPARE Cmp_Tp, TRANSFORM LHS_Trans_T, TRANSFORM RHS_Trans_T=LHS_Trans_T>
@@ -179,6 +180,7 @@ namespace util::cmp::evaled {
 
 
 	template<typename LHS_T, typename RHS_T, COMPARE Cmp_Tp, TRANSFORM RHS_Trans_T>
+	requires requires { typename RHS_Trans_T<RHS_T>::type; }
 	struct rhs : lhs_rhs<LHS_T, RHS_T, Cmp_Tp, std::type_identity, RHS_Trans_T> { };
 
 	template<COMPARE Cmp_Tp, TRANSFORM RHS_Trans_T>
@@ -190,6 +192,7 @@ namespace util::cmp::evaled {
 
 
 	template<typename LHS_T, typename RHS_T, COMPARE Cmp_Tp, TRANSFORM LHS_Trans_T>
+	requires requires { typename LHS_Trans_T<LHS_T>::type; }
 	struct lhs : lhs_rhs<LHS_T, RHS_T, Cmp_Tp, LHS_Trans_T, std::type_identity> { };
 
 	template<COMPARE Cmp_Tp, TRANSFORM LHS_Trans_T>

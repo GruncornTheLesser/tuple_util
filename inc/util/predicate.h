@@ -64,7 +64,7 @@ namespace util::pred {
 
 
 	// pred against a transformed T
-	template<typename T, PREDICATE Pred_T, TRANSFORM Trans_T>
+	template<typename T, PREDICATE Pred_T, TRANSFORM Trans_T> requires requires { typename Trans_T<T>::type; }
 	struct evaled : Pred_T<typename Trans_T<T>::type> { };
 
 	template<typename T, PREDICATE Pred_T, TRANSFORM Trans_T>
