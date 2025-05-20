@@ -112,27 +112,27 @@ namespace util {
 
 
 
-	template<typename Tup, typename T>
-	using append = concat<std::tuple<Tup, std::tuple<T>>>;
+	template<typename Tup, typename ... Ts>
+	using append = concat<std::tuple<Tup, std::tuple<Ts...>>>;
 
-	template<typename T> struct append_ { 
-		template<typename Tup> using type = append<Tup, T>; 
+	template<typename ... Ts> struct append_ { 
+		template<typename Tup> using type = append<Tup, Ts...>; 
 	};
 
-	template<typename Tup, typename T>
-	using append_t = typename append<Tup, T>::type;
+	template<typename Tup, typename ... Ts>
+	using append_t = typename append<Tup, Ts...>::type;
 
 
 
-	template<typename Tup, typename T>
-	using prepend = concat<std::tuple<std::tuple<T>, Tup>>;
+	template<typename Tup, typename ... Ts>
+	using prepend = concat<std::tuple<std::tuple<Ts...>, Tup>>;
 
-	template<typename T> struct prepend_ { 
-		template<typename Tup> using type = prepend<Tup, T>; 
+	template<typename ... Ts> struct prepend_ { 
+		template<typename Tup> using type = prepend<Tup, Ts...>; 
 	};
 
-	template<typename Tup, typename T>
-	using prepend_t = typename prepend<Tup, T>::type;
+	template<typename Tup, typename ... Ts>
+	using prepend_t = typename prepend<Tup, Ts...>::type;
 
 
 
