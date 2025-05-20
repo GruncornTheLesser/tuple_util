@@ -285,6 +285,9 @@ namespace util::cmp {
 	template<typename LHS_T, typename RHS_T>
 	struct is_const_accessible : std::disjunction<std::is_same<LHS_T, RHS_T>, std::is_same<LHS_T, std::add_const_t<RHS_T>>> { };
 
+	template<typename RHS_T>
+	struct is_const_accessible_ { template<typename LHS_T> using type = is_const_accessible<LHS_T, RHS_T>; };
+
 	template<typename LHS_T, typename RHS_T>
 	static constexpr bool is_const_accessible_v = is_const_accessible<LHS_T, RHS_T>::value;
 }
