@@ -68,10 +68,10 @@ namespace util::pred {
 	struct evaled : Pred_T<typename Trans_T<T>::type> { };
 
 	template<typename T, PREDICATE Pred_T, TRANSFORM Trans_T>
-	using evaled_v = evaled<T, Pred_T, Trans_T>::value;
+	static constexpr bool evaled_v = evaled<T, Pred_T, Trans_T>::value;
 
 	template<PREDICATE Pred_T, TRANSFORM Trans_T> struct evaled_ {
-		template<typename T> using type = Pred_T<typename evaled<T, Pred_T, Trans_T>::type>;
+		template<typename T> using type = evaled<T, Pred_T, Trans_T>;
 		template<typename T> using inv =  std::negation<type<T>>; 
 	};
 }

@@ -59,42 +59,36 @@ namespace util {
 	struct eval_each_ { template<typename Tup> using type = eval_each<Tup, Trans_Ts...>; };
 
 
+	
+	template<typename T, PREDICATE Pred_T, TRANSFORM ... Trans_Ts>
+	struct eval_while { using type = T; };
 
-	template<typename T, PREDICATE Pred_T, TRANSFORM Trans_T, typename=void>
-	struct eval_while;
+	template<typename T, PREDICATE Pred_T, TRANSFORM ... Trans_Ts> requires (Pred_T<T>::value)
+	struct eval_while<T, Pred_T, Trans_Ts...> : eval_while<eval_t<T, Trans_Ts...>, Pred_T, Trans_Ts...> { };
 
-	template<typename T, PREDICATE Pred_T, TRANSFORM Trans_T>
-	struct eval_while<T, Pred_T, Trans_T, std::enable_if_t<Pred_T<T>::value>>
-	 : eval_while<typename Trans_T<T>::type, Pred_T, Trans_T>{ };
+	template<typename T, PREDICATE Pred_T, TRANSFORM ... Trans_Ts>
+	using eval_while_t = typename eval_while<T, Pred_T, Trans_Ts...>::type;
 
-	template<typename T, PREDICATE Pred_T, TRANSFORM Trans_T>
-	struct eval_while<T, Pred_T, Trans_T, std::enable_if_t<!Pred_T<T>::value>> {
-		using type = T;
-	};
-
-	template<typename T, PREDICATE Pred_T, TRANSFORM Trans_T>
-	using eval_while_t = typename eval_while<T, Pred_T, Trans_T>::type;
-
-	template<PREDICATE Pred_T, TRANSFORM Trans_T>
-	struct eval_while_ { template<typename T> using type = eval_while<T, Pred_T, Trans_T>; };
+	template<PREDICATE Pred_T, TRANSFORM ... Trans_Ts>
+	struct eval_while_ { template<typename T> using type = eval_while<T, Pred_T, Trans_Ts...>; };
 
 
 
 	struct eval_failure { };
 	namespace details { 
-		template<typename T, template<typename...> typename Eval_Tp, typename V, typename D, typename ... Arg_Ts> 
+		template<typename T, TRANSFORM Trans_T, typename V, typename D> 
 		struct eval_try { using type = D; };
 
-		template<typename T, template<typename...> typename Eval_Tp, typename D, typename ... Arg_Ts> 
-		struct eval_try<T, Eval_Tp, std::void_t<typename Eval_Tp<T, Arg_Ts...>::type>, D, Arg_Ts...> : Eval_Tp<T, Arg_Ts...> { };
+		template<typename T, TRANSFORM Trans_T, typename D> 
+		struct eval_try<T, Trans_T, std::void_t<typename Trans_T<T>::type>, D> : Trans_T<T> { };
 	};
 	
-	template<typename T, template<typename...> typename Eval_Tp, typename D=eval_failure, typename ... Arg_Ts>
-	using eval_try = details::eval_try<T, Eval_Tp, void, D, Arg_Ts...>;
+	template<typename T, TRANSFORM Trans_T, typename D=eval_failure>
+	using eval_try = details::eval_try<T, Trans_T, void, D>;
 	
-	template<template<typename...> typename Eval_Tp, typename D=eval_failure> struct eval_try_ { template<typename T, typename ... Arg_Ts> 
-	using type = eval_try<T, Eval_Tp, D, Arg_Ts...>; };
+	template<TRANSFORM Trans_T, typename D=eval_failure> struct eval_try_ { template<typename T> 
+	using type = eval_try<T, Trans_T, D>; };
 	
-	template<typename T, template<typename...> typename Eval_Tp, typename D=eval_failure, typename ... Arg_Ts>
-	using eval_try_t = typename eval_try<T, Eval_Tp, D, Arg_Ts...>::type;
+	template<typename T, TRANSFORM Trans_T, typename D=eval_failure>
+	using eval_try_t = typename eval_try<T, Trans_T, D>::type;
 }

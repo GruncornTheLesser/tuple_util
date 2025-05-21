@@ -1,4 +1,5 @@
 #pragma once
+#include "util/eval.h"
 #include "util/macro.h"
 #include "util/predicate.h"
 #include "util/compare.h"
@@ -113,7 +114,10 @@ namespace util {
 
 
 	template<typename Tup, typename ... Ts>
-	using append = concat<std::tuple<Tup, std::tuple<Ts...>>>;
+	struct append;
+
+	template<CONTAINER Tup, typename ... Us, typename ... Ts>
+	struct append<Tup<Us...>, Ts...> { using type = Tup<Us..., Ts...>; };
 
 	template<typename ... Ts> struct append_ { 
 		template<typename Tup> using type = append<Tup, Ts...>; 
@@ -125,7 +129,10 @@ namespace util {
 
 
 	template<typename Tup, typename ... Ts>
-	using prepend = concat<std::tuple<std::tuple<Ts...>, Tup>>;
+	struct prepend;
+
+	template<CONTAINER Tup, typename ... Us, typename ... Ts>
+	struct prepend<Tup<Us...>, Ts...> { using type = Tup<Ts..., Us...>; };
 
 	template<typename ... Ts> struct prepend_ { 
 		template<typename Tup> using type = prepend<Tup, Ts...>; 
@@ -133,6 +140,27 @@ namespace util {
 
 	template<typename Tup, typename ... Ts>
 	using prepend_t = typename prepend<Tup, Ts...>::type;
+
+
+
+	template<typename Tup, std::size_t N, TRANSFORM ... Trans_Ts>
+	struct eval_at;
+
+	template<CONTAINER Tup, typename T, typename ... Ts, std::size_t N, TRANSFORM ... Trans_Ts>
+	struct eval_at<Tup<T, Ts...>, N, Trans_Ts...> { 
+		using type = typename util::prepend<typename eval_at<Tup<Ts...>, N - 1, Trans_Ts...>::type, T>::type;
+	};
+
+	template<CONTAINER Tup, typename T, typename ... Ts, TRANSFORM ... Trans_Ts>
+	struct eval_at<Tup<T, Ts...>, 0, Trans_Ts...> { 
+		using type = Tup<eval_t<T, Trans_Ts...>, Ts...>;
+	};
+
+	template<typename Tup, std::size_t N, TRANSFORM ... Trans_Ts>
+	using eval_at_t = typename eval_at<Tup, N, Trans_Ts...>::type; 
+	
+	template<std::size_t N, TRANSFORM ... Trans_Ts>
+	struct eval_at_ { template<typename Tup> using type = eval_at<Tup, N, Trans_Ts...>; };
 
 
 
