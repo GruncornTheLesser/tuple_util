@@ -60,6 +60,26 @@ namespace util {
 
 
 
+	template<typename T, PREDICATE Pred_T, TRANSFORM Trans_T, typename=void>
+	struct eval_while;
+
+	template<typename T, PREDICATE Pred_T, TRANSFORM Trans_T>
+	struct eval_while<T, Pred_T, Trans_T, std::enable_if_t<Pred_T<T>::value>>
+	 : eval_while<typename Trans_T<T>::type, Pred_T, Trans_T>{ };
+
+	template<typename T, PREDICATE Pred_T, TRANSFORM Trans_T>
+	struct eval_while<T, Pred_T, Trans_T, std::enable_if_t<!Pred_T<T>::value>> {
+		using type = T;
+	};
+
+	template<typename T, PREDICATE Pred_T, TRANSFORM Trans_T>
+	using eval_while_t = typename eval_while<T, Pred_T, Trans_T>::type;
+
+	template<PREDICATE Pred_T, TRANSFORM Trans_T>
+	struct eval_while_ { template<typename T> using type = eval_while<T, Pred_T, Trans_T>; };
+
+
+
 	struct eval_failure { };
 	namespace details { 
 		template<typename T, template<typename...> typename Eval_Tp, typename V, typename D, typename ... Arg_Ts> 
