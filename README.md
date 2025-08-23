@@ -40,8 +40,8 @@ using set_union_example = util::set_union_t<std::tuple<int, float>, std::tuple<f
 using concat_example = util::concat_t<std::tuple<std::tuple<int, int>, std::tuple<float>>>; // std::tuple<int, int, float>
 
 // boring tuple manipulation that I've never ac used
-using append_example = util::append_t<std::tuple<int, float>, int>; // tuple<int, float, int>
-using prepend_example = util::prepend_t<std::tuple<int, float>, int>; // tuple<int, int, float>
+using push_back_example = util::push_back_t<std::tuple<int, float>, int>; // tuple<int, float, int>
+using push_front_example = util::push_front_t<std::tuple<int, float>, int>; // tuple<int, int, float>
 using pop_front_example = util::pop_front_t<std::tuple<int, float>>; // tuple<float>;
 using pop_back_example = util::pop_back_t<std::tuple<int, float>>; // tuple<int>;
 using get_front_example = util::get_front_t<std::tuple<int, float>>; // int;

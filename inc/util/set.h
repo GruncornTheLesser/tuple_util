@@ -19,7 +19,10 @@ namespace util {
 
 	
 	template<std::size_t N, typename Tup> 
-	struct arg_at;
+	struct arg_at { using type = eval_failure; };
+
+	template<std::size_t N>
+	struct arg_at_ { template<typename Tup> using type = arg_at<N, Tup>; };
 
 	template<std::size_t N, typename Tup> 
 	using arg_at_t = typename arg_at<N, Tup>::type;
@@ -28,7 +31,7 @@ namespace util {
 	struct arg_at<N, Tp<T, Ts...>> : arg_at<N - 1u, Tp<Ts...>> { };
 
 	template<CONTAINER Tp, typename T, typename ... Ts>
-	struct arg_at<0, Tp<T, Ts...>> : std::type_identity<T> { };
+	struct arg_at<0, Tp<T, Ts...>> { using type = T; };
 
 	
 	template<typename Tup>
@@ -48,6 +51,9 @@ namespace util {
 
 	template<typename Tup, typename Ind>
 	struct subset;
+
+	template<typename Ind>
+	struct subset_ { template<typename Tup> using type = subset<Tup, Ind>; };
 
 	template<typename Tup, typename Ind>
 	using subset_t = typename subset<Tup, Ind>::type;
@@ -114,32 +120,32 @@ namespace util {
 
 
 	template<typename Tup, typename ... Ts>
-	struct append;
+	struct push_back;
 
 	template<CONTAINER Tup, typename ... Us, typename ... Ts>
-	struct append<Tup<Us...>, Ts...> { using type = Tup<Us..., Ts...>; };
+	struct push_back<Tup<Us...>, Ts...> { using type = Tup<Us..., Ts...>; };
 
-	template<typename ... Ts> struct append_ { 
-		template<typename Tup> using type = append<Tup, Ts...>; 
+	template<typename ... Ts> struct push_back_ { 
+		template<typename Tup> using type = push_back<Tup, Ts...>; 
 	};
 
 	template<typename Tup, typename ... Ts>
-	using append_t = typename append<Tup, Ts...>::type;
+	using push_back_t = typename push_back<Tup, Ts...>::type;
 
 
 
 	template<typename Tup, typename ... Ts>
-	struct prepend;
+	struct push_front;
 
 	template<CONTAINER Tup, typename ... Us, typename ... Ts>
-	struct prepend<Tup<Us...>, Ts...> { using type = Tup<Ts..., Us...>; };
+	struct push_front<Tup<Us...>, Ts...> { using type = Tup<Ts..., Us...>; };
 
-	template<typename ... Ts> struct prepend_ { 
-		template<typename Tup> using type = prepend<Tup, Ts...>; 
+	template<typename ... Ts> struct push_front_ { 
+		template<typename Tup> using type = push_front<Tup, Ts...>; 
 	};
 
 	template<typename Tup, typename ... Ts>
-	using prepend_t = typename prepend<Tup, Ts...>::type;
+	using push_front_t = typename push_front<Tup, Ts...>::type;
 
 
 
@@ -148,7 +154,7 @@ namespace util {
 
 	template<CONTAINER Tup, typename T, typename ... Ts, std::size_t N, TRANSFORM ... Trans_Ts>
 	struct eval_at<Tup<T, Ts...>, N, Trans_Ts...> { 
-		using type = typename util::prepend<typename eval_at<Tup<Ts...>, N - 1, Trans_Ts...>::type, T>::type;
+		using type = typename util::push_front<typename eval_at<Tup<Ts...>, N - 1, Trans_Ts...>::type, T>::type;
 	};
 
 	template<CONTAINER Tup, typename T, typename ... Ts, TRANSFORM ... Trans_Ts>
