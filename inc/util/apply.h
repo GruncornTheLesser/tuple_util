@@ -14,8 +14,8 @@ namespace util {
         return details::apply<Tup>(std::forward<Func_T>(func), std::make_index_sequence<arg_count_v<Tup>>{}, std::forward<Arg_Ts>(args)...);
     }
     
-    template<typename Tup, typename Ret_T, typename Func_T, typename ... Arg_Ts>
-    inline constexpr decltype(auto) apply_each(Func_T&& func, Arg_Ts&& ... args) {
-        return apply<Tup>([&]<typename ... Ts>{ return Ret_T{ func.template operator()<Ts>()... }; });
+    template<typename Tup, typename Func_T, typename ... Arg_Ts>
+    inline constexpr void apply_each(Func_T&& func, Arg_Ts&& ... args) {
+        return details::apply<Tup>([&]<typename ... Ts>{ (func.template operator()<Ts>(), ...); }, std::make_index_sequence<arg_count_v<Tup>>{}, std::forward<Arg_Ts>(args)...);
     }
 }
