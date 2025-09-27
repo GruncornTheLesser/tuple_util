@@ -91,4 +91,17 @@ namespace util {
 	
 	template<typename T, TRANSFORM Trans_T, typename D=eval_failure>
 	using eval_try_t = typename eval_try<T, Trans_T, D>::type;
+
+
+
+	template<typename T, typename D>
+	struct supersede { using type = D; };
+
+	template<typename T, typename D>
+	using supersede_t = D;
+
+	template<typename D>
+	struct supersede_ { 
+		template<typename T> using type = supersede<T, D>;
+	};
 }
