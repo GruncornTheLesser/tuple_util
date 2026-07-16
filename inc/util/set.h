@@ -6,6 +6,33 @@
 #include <array>
 #include <algorithm>
 
+namespace util::pred {
+	template<typename T, typename Tup, COMPARE Same_T=std::is_same>
+	struct element_of;
+
+	template<typename T, CONTAINER Tup, typename ... Ts, COMPARE Same_T>
+	struct element_of<T, Tup<Ts...>, Same_T> : std::disjunction<Same_T<T, Ts>...> { };
+
+	template<typename Tup, COMPARE Cmp_T = std::is_same>
+	struct element_of_ {
+		template<typename T> using type = element_of<T, Tup, Cmp_T>;
+		template<typename T> using inv =  std::negation<type<T>>;
+	};
+
+	template<typename T, COMPARE Cmp_T = std::is_same>
+	struct contains_ {
+		template<typename Tup> using type = element_of<T, Tup>;
+		template<typename Tup> using inv =  std::negation<type<Tup>>;
+	};
+
+	template<typename T, typename Tup, COMPARE Same_T = std::is_same>
+	static constexpr bool element_of_v = element_of<T, Tup, Same_T>::value;
+
+	template<typename Tup, typename T, COMPARE Same_T = std::is_same>
+	static constexpr bool contains_v = element_of<T, Tup, Same_T>::value;
+}
+
+
 namespace util {
 	template<typename Tup> 
 	struct arg_count;
@@ -19,7 +46,7 @@ namespace util {
 
 	
 	template<std::size_t N, typename Tup> 
-	struct arg_at { using type = eval_failure; };
+	struct arg_at;
 
 	template<std::size_t N>
 	struct arg_at_ { template<typename Tup> using type = arg_at<N, Tup>; };
@@ -248,13 +275,13 @@ namespace util {
 
 
 
-	template<typename Tup, ATTRIBUTER Get_Tp>
+	template<typename Tup, ATTRIBUTER Get_Tp=get_value>
 	struct find_min;
 
-	template<ATTRIBUTER Get_Tp>
+	template<ATTRIBUTER Get_Tp=get_value>
 	struct find_min_ { template<typename Tup> using type = find_min<Tup, Get_Tp>; };
 
-	template<typename Tup, ATTRIBUTER Get_Tp>
+	template<typename Tup, ATTRIBUTER Get_Tp=get_value>
 	using find_min_t = typename find_min<Tup, Get_Tp>::type;
 
 	template<CONTAINER Tup, typename ... Ts, ATTRIBUTER Get_Tp>
@@ -268,13 +295,13 @@ namespace util {
 
 
 
-	template<typename Tup, ATTRIBUTER Get_Tp>
+	template<typename Tup, ATTRIBUTER Get_Tp=get_value>
 	struct find_max;
 
-	template<ATTRIBUTER Get_Tp>
+	template<ATTRIBUTER Get_Tp=get_value>
 	struct find_max_ { template<typename Tup> using type = find_max<Tup, Get_Tp>; };
 
-	template<typename Tup, ATTRIBUTER Get_Tp>
+	template<typename Tup, ATTRIBUTER Get_Tp=get_value>
 	using find_max_t = typename find_max<Tup, Get_Tp>::type;
 
 	template<CONTAINER Tup, typename ... Ts, ATTRIBUTER Get_Tp>
@@ -349,8 +376,6 @@ namespace util {
 	struct unique_priority_ { template<typename Tup> using type = unique_priority<Tup, Same_T, Priority_T>; };
 
 
-
-	// TODO integrate unique into set_union
 	template<typename Tup1, typename Tup2 = std::tuple<>, COMPARE Same_T = std::is_same>
 	struct set_union;
 
@@ -365,7 +390,7 @@ namespace util {
 
 
 
-	// TODO doesnt remove duplicate
+	
 	template<typename Tup1, typename Tup2, COMPARE Same_T = std::is_same>
 	struct set_intersect;
 
@@ -373,7 +398,7 @@ namespace util {
 	using set_intersect_t = typename set_intersect<Tup, Set_T, Same_T>::type;
 
 	template<typename Tup1, typename Tup2, COMPARE Same_T>
-	struct set_intersect : filter<set_union_t<Tup1, Tup2, Same_T>,	pred::conj_<
+	struct set_intersect : filter<set_union_t<Tup1, Tup2, Same_T>, pred::conj_<
 		pred::element_of_<Tup1, Same_T>::template type,
 		pred::element_of_<Tup2, Same_T>::template type
 	>::template type> { };
@@ -385,7 +410,7 @@ namespace util {
 	};
 }
 
-// [ ] subset - pred set
+// [ ] subset/superset
 namespace util::pred {
 	template<typename SubSet_T, typename SuperSet_T, COMPARE Same_T=std::is_same>
 	struct is_subset : allof<SubSet_T, element_of_<SuperSet_T, Same_T>::template type> { };
@@ -395,5 +420,33 @@ namespace util::pred {
 	struct is_subset_ {
 		template<typename SubSet_T> using type = is_subset<SubSet_T, SuperSet_T, Same_T>;
 		template<typename SubSet_T> using inv =  std::negation<type<SubSet_T>>;
+	};
+
+	template<typename SuperSet_T, typename SubSet_T, COMPARE Same_T=std::is_same>
+	struct is_superset : allof<SuperSet_T, element_of_<SubSet_T, Same_T>::template type> { };
+	template<typename SuperSet_T, typename SubSet_T, COMPARE Same_T=std::is_same>
+	static constexpr bool is_superset_v = is_superset<SuperSet_T, SubSet_T, Same_T>::value;
+	template<typename SubSet_T, COMPARE Same_T=std::is_same>
+	struct is_superset_ {
+		template<typename SuperSet_T> using type = is_superset<SuperSet_T, SubSet_T, Same_T>;
+		template<typename SuperSet_T> using inv =  std::negation<type<SuperSet_T>>;
+	};
+}
+
+namespace util::cmp {
+	template<typename T1, typename T2, COMPARE Cmp_T=std::is_same>
+	struct is_same_set;
+	template<typename T1, typename T2, COMPARE Cmp_T=std::is_same>
+	static constexpr bool is_same_set_v = is_same_set<T1, T2, Cmp_T>::value;
+
+	template<CONTAINER Tup1, typename ... T1s, CONTAINER Tup2, typename ... T2s, COMPARE Cmp_T>
+	struct is_same_set<Tup1<T1s...>, Tup2<T2s...>, Cmp_T> {
+		static constexpr bool value = (sizeof...(T1s) == sizeof...(T2s)) && (pred::element_of_v<T1s, Tup2<T2s...>, Cmp_T> && ...);
+	};
+
+	template<typename Tup1, COMPARE Cmp_T=std::is_same>
+	struct is_same_set_ {
+		template<typename Tup2> using type = is_same_set<Tup1, Tup2, Cmp_T>;
+		template<typename Tup2> using inv = std::negation<type<Tup2>>;
 	};
 }

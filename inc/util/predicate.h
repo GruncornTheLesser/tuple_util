@@ -76,33 +76,6 @@ namespace util::pred {
 	};
 }
 
-// [ ] element of/contains - pred set
-namespace util::pred {
-	template<typename T, typename Tup, COMPARE Same_T=std::is_same>
-	struct element_of;
-
-	template<typename T, CONTAINER Tup, typename ... Ts, COMPARE Same_T>
-	struct element_of<T, Tup<Ts...>, Same_T> : std::disjunction<Same_T<T, Ts>...> { };
-
-	template<typename Tup, COMPARE Cmp_T = std::is_same>
-	struct element_of_ {
-		template<typename T> using type = element_of<T, Tup, Cmp_T>;
-		template<typename T> using inv =  std::negation<type<T>>;
-	};
-
-	template<typename T, COMPARE Cmp_T = std::is_same>
-	struct contains_ {
-		template<typename Tup> using type = element_of<T, Tup>;
-		template<typename Tup> using inv =  std::negation<type<Tup>>;
-	};
-
-	template<typename T, typename Tup, COMPARE Same_T = std::is_same>
-	static constexpr bool element_of_v = element_of<T, Tup, Same_T>::value;
-
-	template<typename Tup, typename T, COMPARE Same_T = std::is_same>
-	static constexpr bool contains_v = element_of<T, Tup, Same_T>::value;
-}
-
 namespace util {
 	template<typename T, PREDICATE Pred_T>
 	struct util_assert { using type = T; static_assert(Pred_T<T>::value); };

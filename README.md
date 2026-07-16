@@ -58,5 +58,14 @@ using wrap_example = util::wrap_t<int, std::tuple>; // tuple<int>
 using unwrap_example = util::unwrap_t<std::tuple<int>>; // int
 using rewrap_example = util::rewrap_t<std::tuple<int, float, char>, std::variant>; // variant<int, float, char>;
 ```
+
+### error checking
+This library has some rudimentary error check in the form of `util::eval_try` which if the op is invalid will have a defaulting type of `util::eval_failure`.
+some ops already implement `util::eval_failure` for example 
+
 ## motivation
 I apparently dont like coding in c++ and would instead prefer smashing my head against the nearest hard surface.
+I wanted the tools and simple syntax to create concise and succinct bad practice code with features such as:
+- massive compile time overhead
+- built in obfuscation 
+- an unerring source of frustration
