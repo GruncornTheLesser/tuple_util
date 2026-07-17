@@ -4,7 +4,7 @@
 #include <type_traits>
 
 // [ ] eval - transform
-namespace util {
+namespace TUPLE_UTIL_NAMESPACE {
 	template<typename T, TRANSFORM ... Trans_Ts>
 	struct eval;
 

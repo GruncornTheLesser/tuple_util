@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(util VERSION 1.0 LANGUAGES CXX)
+project(tuple_util VERSION 1.0 LANGUAGES CXX)
 
-add_library(util_lib INTERFACE)
+add_library(tuple_util INTERFACE)
 
-target_compile_features(util_lib INTERFACE cxx_std_23)
+target_compile_features(tuple_util INTERFACE cxx_std_23)
 
-target_include_directories(util_lib INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+target_include_directories(tuple_util INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
 if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp") 
 	set(CMAKE_CXX_STANDARD 23)
@@ -16,5 +16,5 @@ if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
 
 	add_executable(util ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 
-	target_link_libraries(util PRIVATE util_lib)
+	target_link_libraries(util PRIVATE tuple_util)
 endif()

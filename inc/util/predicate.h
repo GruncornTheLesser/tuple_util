@@ -2,7 +2,7 @@
 #include "util/macro.h"
 #include <type_traits>
 
-namespace util::pred {
+namespace TUPLE_UTIL_NAMESPACE::pred {
 	template<PREDICATE Pred_T>
 	struct negate_ {
 		template<typename T> using type = std::negation<Pred_T<T>>;
@@ -76,7 +76,7 @@ namespace util::pred {
 	};
 }
 
-namespace util {
+namespace TUPLE_UTIL_NAMESPACE {
 	template<typename T, PREDICATE Pred_T>
 	struct util_assert { using type = T; static_assert(Pred_T<T>::value); };
 	template<PREDICATE Pred_T>

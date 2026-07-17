@@ -6,7 +6,7 @@
 #include <array>
 #include <algorithm>
 
-namespace util::pred {
+namespace TUPLE_UTIL_NAMESPACE::pred {
 	template<typename T, typename Tup, COMPARE Same_T=std::is_same>
 	struct element_of;
 
@@ -33,7 +33,7 @@ namespace util::pred {
 }
 
 
-namespace util {
+namespace TUPLE_UTIL_NAMESPACE {
 	template<typename Tup> 
 	struct arg_count;
 
@@ -181,7 +181,7 @@ namespace util {
 
 	template<CONTAINER Tup, typename T, typename ... Ts, std::size_t N, TRANSFORM ... Trans_Ts>
 	struct eval_at<Tup<T, Ts...>, N, Trans_Ts...> { 
-		using type = typename util::push_front<typename eval_at<Tup<Ts...>, N - 1, Trans_Ts...>::type, T>::type;
+		using type = typename push_front<typename eval_at<Tup<Ts...>, N - 1, Trans_Ts...>::type, T>::type;
 	};
 
 	template<CONTAINER Tup, typename T, typename ... Ts, TRANSFORM ... Trans_Ts>
@@ -241,7 +241,7 @@ namespace util {
 	template<PREDICATE Pred_Tp>
 	struct filter_ { 
 		template<typename Tup> using type = filter<Tup, Pred_Tp>;
-		template<typename Tup> using inv =  filter<Tup, util::pred::negate_<Pred_Tp>::template type>;
+		template<typename Tup> using inv =  filter<Tup, pred::negate_<Pred_Tp>::template type>;
 	};
 
 
@@ -275,19 +275,19 @@ namespace util {
 
 
 
-	template<typename Tup, ATTRIBUTER Get_Tp=get_value>
+	template<typename Tup, ATTRIBUTER Get_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	struct find_min;
 
-	template<ATTRIBUTER Get_Tp=get_value>
+	template<ATTRIBUTER Get_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	struct find_min_ { template<typename Tup> using type = find_min<Tup, Get_Tp>; };
 
-	template<typename Tup, ATTRIBUTER Get_Tp=get_value>
+	template<typename Tup, ATTRIBUTER Get_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	using find_min_t = typename find_min<Tup, Get_Tp>::type;
 
 	template<CONTAINER Tup, typename ... Ts, ATTRIBUTER Get_Tp>
 	struct find_min<Tup<Ts...>, Get_Tp> {
 	private:
-		using value_type = decltype(Get_Tp<std::tuple_element_t<0, std::tuple<Ts...>>>::value);
+		using value_type = decltype(Get_Tp<arg_at_t<0, Tup<Ts...>>>::value);
 		static constexpr std::array<value_type, sizeof...(Ts)> values { Get_Tp<Ts>::value... };
 	public:
 		static constexpr std::size_t value = std::ranges::min_element(values) - values.begin();
@@ -295,19 +295,19 @@ namespace util {
 
 
 
-	template<typename Tup, ATTRIBUTER Get_Tp=get_value>
+	template<typename Tup, ATTRIBUTER Get_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	struct find_max;
 
-	template<ATTRIBUTER Get_Tp=get_value>
+	template<ATTRIBUTER Get_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	struct find_max_ { template<typename Tup> using type = find_max<Tup, Get_Tp>; };
 
-	template<typename Tup, ATTRIBUTER Get_Tp=get_value>
+	template<typename Tup, ATTRIBUTER Get_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	using find_max_t = typename find_max<Tup, Get_Tp>::type;
 
 	template<CONTAINER Tup, typename ... Ts, ATTRIBUTER Get_Tp>
 	struct find_max<Tup<Ts...>, Get_Tp> {
 	private:
-		using value_type = decltype(Get_Tp<std::tuple_element_t<0, std::tuple<Ts...>>>::value);
+		using value_type = decltype(Get_Tp<arg_at_t<0, Tup<Ts...>>>::value);
 		static constexpr std::array<value_type, sizeof...(Ts)> values { Get_Tp<Ts>::value... };
 	public:
 		static constexpr std::size_t value = std::ranges::max_element(values) - values.begin();
@@ -323,7 +323,7 @@ namespace util {
 	using sort_t = typename sort<Tup, LT_T>::type;
 
 	template<CONTAINER Tup, typename Pivot_T, typename ... Ts, COMPARE Cmp_T>
-	struct sort<Tup<Pivot_T, Ts...>, Cmp_T> : concat<std::tuple<
+	struct sort<Tup<Pivot_T, Ts...>, Cmp_T> : concat<TUPLE_UTIL_DEFAULT_CONTAINER<
 		sort_t<filter_t<Tup<Ts...>, cmp::to_<Pivot_T, Cmp_T>::template inv>,  Cmp_T>, Tup<Pivot_T>, // not less than
 		sort_t<filter_t<Tup<Ts...>, cmp::to_<Pivot_T, Cmp_T>::template type>, Cmp_T>>> 				// less than
 	{ };
@@ -354,8 +354,7 @@ namespace util {
 	using unique_t = typename unique<Tup, Same_T>::type;
 
 	template<CONTAINER Tup, typename T, typename ... Ts, COMPARE Same_T>
-	struct unique<Tup<T, Ts...>, Same_T> : concat<std::tuple<Tup<T>, typename unique<
-		filter_t<std::tuple<Ts...>, cmp::to_<T, Same_T>::template inv>, Same_T>::type>>
+	struct unique<Tup<T, Ts...>, Same_T> : concat<TUPLE_UTIL_DEFAULT_CONTAINER<Tup<T>, typename unique<filter_t<Tup<Ts...>, cmp::to_<T, Same_T>::template inv>, Same_T>::type>>
 	{ };
 
 	template<CONTAINER Tup, COMPARE Same_T>
@@ -376,14 +375,14 @@ namespace util {
 	struct unique_priority_ { template<typename Tup> using type = unique_priority<Tup, Same_T, Priority_T>; };
 
 
-	template<typename Tup1, typename Tup2 = std::tuple<>, COMPARE Same_T = std::is_same>
+	template<typename Tup1, typename Tup2 = TUPLE_UTIL_DEFAULT_CONTAINER<>, COMPARE Same_T = std::is_same>
 	struct set_union;
 
 	template<typename Tup, typename Set_T, COMPARE Same_T = std::is_same>
 	using set_union_t = typename set_union<Tup, Set_T, Same_T>::type;
 
 	template<typename Tup1, typename Tup2, COMPARE Same_T>
-	struct set_union : unique<concat_t<std::tuple<Tup1, Tup2>>, Same_T> { };
+	struct set_union : unique<concat_t<TUPLE_UTIL_DEFAULT_CONTAINER<Tup1, Tup2>>, Same_T> { };
 
 	template<typename Set_T, COMPARE Same_T = std::is_same>
 	struct set_union_ { template<typename Tup> using type = set_union<Tup, Set_T, Same_T>; };
@@ -411,7 +410,7 @@ namespace util {
 }
 
 // [ ] subset/superset
-namespace util::pred {
+namespace TUPLE_UTIL_NAMESPACE::pred {
 	template<typename SubSet_T, typename SuperSet_T, COMPARE Same_T=std::is_same>
 	struct is_subset : allof<SubSet_T, element_of_<SuperSet_T, Same_T>::template type> { };
 	template<typename SubSet_T, typename SuperSet_T, COMPARE Same_T=std::is_same>
@@ -433,7 +432,7 @@ namespace util::pred {
 	};
 }
 
-namespace util::cmp {
+namespace TUPLE_UTIL_NAMESPACE::cmp {
 	template<typename T1, typename T2, COMPARE Cmp_T=std::is_same>
 	struct is_same_set;
 	template<typename T1, typename T2, COMPARE Cmp_T=std::is_same>

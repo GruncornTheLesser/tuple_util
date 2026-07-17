@@ -2,7 +2,7 @@
 #include "util/macro.h"
 #include <type_traits>
 
-namespace util {
+namespace TUPLE_UTIL_NAMESPACE {
 	template<typename T, CONTAINER Tup>
 	struct rewrap;
 
@@ -34,7 +34,7 @@ namespace util {
 	using unwrap_t = typename unwrap<T>::type;
 }
 
-namespace util::pred {
+namespace TUPLE_UTIL_NAMESPACE::pred {
 	template<typename T, CONTAINER Tup>
 	struct is_wrapped_by : std::false_type { };
 

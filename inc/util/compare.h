@@ -2,7 +2,7 @@
 #include "util/macro.h"
 #include <type_traits>
 
-namespace util::cmp {
+namespace TUPLE_UTIL_NAMESPACE::cmp {
 	template<typename LHS_T, typename RHS_T, COMPARE Cmp_Tp>
 	using negate = std::negation<Cmp_Tp<LHS_T, RHS_T>>;
 
@@ -49,89 +49,89 @@ namespace util::cmp {
 	};
 }
 
-namespace util {
+namespace TUPLE_UTIL_NAMESPACE {
 	// default Attrib_Tp
 	template<typename T> struct get_value { static constexpr auto value = T::value; };
 }
 
 // compare attribs
-namespace util::cmp {
-	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=get_value>
+namespace TUPLE_UTIL_NAMESPACE::cmp {
+	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	struct lt : std::bool_constant<(Attrib_Tp<LHS_T>::value < Attrib_Tp<RHS_T>::value)> { };
 
-	template<ATTRIBUTER Attrib_Tp=get_value>
+	template<ATTRIBUTER Attrib_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	struct lt_ { 
 		template<typename LHS_T, typename RHS_T> using type = cmp::lt<LHS_T, RHS_T, Attrib_Tp>;
 		template<typename LHS_T, typename RHS_T> using inv =  cmp::lt<RHS_T, LHS_T, Attrib_Tp>;
 	};
 
-	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=get_value>
+	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	static constexpr bool lt_v = lt<LHS_T, RHS_T, Attrib_Tp>::value;
 
 
-	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=get_value>
+	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	struct lteq : std::bool_constant<(Attrib_Tp<LHS_T>::value <= Attrib_Tp<RHS_T>::value)> { };
 
-	template<ATTRIBUTER Attrib_Tp=get_value>
+	template<ATTRIBUTER Attrib_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	struct lteq_ { 
 		template<typename LHS_T, typename RHS_T> using type = cmp::lteq<LHS_T, RHS_T, Attrib_Tp>;
 		template<typename LHS_T, typename RHS_T> using inv =  cmp::lteq<RHS_T, LHS_T, Attrib_Tp>;
 	};
 
-	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=get_value>
+	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	static constexpr bool lteq_v = lteq<LHS_T, RHS_T, Attrib_Tp>::value;
 
 
-	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=get_value>
+	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	struct gt : std::bool_constant<(Attrib_Tp<LHS_T>::value > Attrib_Tp<RHS_T>::value)> { };
 
-	template<ATTRIBUTER Attrib_Tp=get_value>
+	template<ATTRIBUTER Attrib_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	struct gt_ { 
 		template<typename LHS_T, typename RHS_T> using type = cmp::gt<LHS_T, RHS_T, Attrib_Tp>;
 		template<typename LHS_T, typename RHS_T> using inv =  cmp::gt<RHS_T, LHS_T, Attrib_Tp>;
 	};
 
-	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=get_value>
+	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	static constexpr bool gt_v = gt<LHS_T, RHS_T, Attrib_Tp>::value;
 
 
-	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=get_value>
+	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	struct gteq : std::bool_constant<(Attrib_Tp<LHS_T>::value >= Attrib_Tp<RHS_T>::value)> { };
 
-	template<ATTRIBUTER Attrib_Tp=get_value>
+	template<ATTRIBUTER Attrib_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	struct gteq_ { 
 		template<typename LHS_T, typename RHS_T> using type = cmp::gteq<LHS_T, RHS_T, Attrib_Tp>;
 		template<typename LHS_T, typename RHS_T> using inv =  cmp::gteq<RHS_T, LHS_T, Attrib_Tp>; 
 	};
 
-	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=get_value>
+	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	static constexpr bool gteq_v = gteq<LHS_T, RHS_T, Attrib_Tp>::value;
 
 
-	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=get_value>
+	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	struct eq : std::bool_constant<(Attrib_Tp<LHS_T>::value == Attrib_Tp<RHS_T>::value)> { };
 
-	template<ATTRIBUTER Attrib_Tp=get_value>
+	template<ATTRIBUTER Attrib_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	struct eq_ { 
 		template<typename LHS_T, typename RHS_T> using type = cmp::eq<LHS_T, RHS_T, Attrib_Tp>;
 		template<typename LHS_T, typename RHS_T> using inv =  cmp::eq<RHS_T, LHS_T, Attrib_Tp>;
 	};
 
-	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=get_value>
+	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	static constexpr bool eq_v = eq<LHS_T, RHS_T, Attrib_Tp>::value;
 
 
-	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=get_value>
+	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	struct neq : std::bool_constant<(Attrib_Tp<LHS_T>::value != Attrib_Tp<RHS_T>::value)> { };
 	
-	template<ATTRIBUTER Attrib_Tp=get_value>
+	template<ATTRIBUTER Attrib_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	struct neq_ { template<typename LHS_T, typename RHS_T> using type = cmp::neq<LHS_T, RHS_T, Attrib_Tp>; };
 
-	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=get_value>
+	template<typename LHS_T, typename RHS_T, ATTRIBUTER Attrib_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
 	static constexpr bool neq_v = neq<LHS_T, RHS_T, Attrib_Tp>::value;
 }
 
-namespace util::cmp {
+namespace TUPLE_UTIL_NAMESPACE::cmp {
 	template<typename LHS_T, typename RHS_T, COMPARE ... Cmp_Tps>
 	struct priority;
 
@@ -163,7 +163,7 @@ namespace util::cmp {
 	
 }
 
-namespace util::cmp::evaled {
+namespace TUPLE_UTIL_NAMESPACE::cmp::evaled {
 	template<typename LHS_T, typename RHS_T, COMPARE Cmp_Tp, TRANSFORM LHS_Trans_T, TRANSFORM RHS_Trans_T=LHS_Trans_T> 
 	struct lhs_rhs : Cmp_Tp<typename LHS_Trans_T<LHS_T>::type, typename RHS_Trans_T<RHS_T>::type> { };
 

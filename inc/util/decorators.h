@@ -3,7 +3,7 @@
 #include "util/eval.h"
 
 // [ ] copy_ const/volatile/reference/cv/cvref
-namespace util
+namespace TUPLE_UTIL_NAMESPACE
 {
 	template<typename T, typename U>
 	struct copy_const { using type = T; };
@@ -79,7 +79,7 @@ namespace pred {
 	inline constexpr bool is_indirect_v = is_indirect<T>::value;
 }
 
-namespace util {
+namespace TUPLE_UTIL_NAMESPACE {
 	template<typename T>
 	struct remove_indirect { using type = T; };
 	template<typename T>
@@ -101,7 +101,7 @@ namespace util {
 	template<typename U>
 	struct copy_indirect_ { template<typename T> using type = copy_indirect<T, U>; };
 
-	template<typename T, TRANSFORM Trans_T> struct eval_indirect : util::eval<T, util::remove_indirect, Trans_T, util::copy_indirect_<T>::template type>  { };
+	template<typename T, TRANSFORM Trans_T> struct eval_indirect : eval<T, remove_indirect, Trans_T, copy_indirect_<T>::template type>  { };
 	template<typename T, TRANSFORM Trans_T> using eval_indirect_t = typename eval_indirect<T, Trans_T>::type;
 	template<TRANSFORM Trans_T> struct eval_indirect_ { template<typename T> using type = eval_indirect<T, Trans_T>; };
 
@@ -120,30 +120,30 @@ namespace util {
 	template<typename T> struct add_indirect_rval_ref : eval_indirect<T, std::add_rvalue_reference> { };
 	template<typename T> using add_indirect_rval_ref_t = typename add_indirect_rval_ref<T>::type;
 		
-	template<typename T, typename U> struct copy_indirect_const : util::eval<T, util::remove_indirect, util::copy_const_<U>::template type, util::copy_indirect_<T>::template type> { };
+	template<typename T, typename U> struct copy_indirect_const : eval<T, remove_indirect, copy_const_<U>::template type, copy_indirect_<T>::template type> { };
 	template<typename T, typename U> using copy_indirect_const_t = typename copy_indirect_const<T, U>::type;
 
-	template<typename T, typename U> struct copy_indirect_volatile : util::eval<T, util::remove_indirect, util::copy_volatile_<U>::template type, util::copy_indirect_<T>::template type> { };
+	template<typename T, typename U> struct copy_indirect_volatile : eval<T, remove_indirect, copy_volatile_<U>::template type, copy_indirect_<T>::template type> { };
 	template<typename T, typename U> using copy_indirect_volatile_t = typename copy_indirect_volatile<T, U>::type;
 	
-	template<typename T, typename U> struct copy_indirect_lval_ref : util::eval<T, util::remove_indirect, util::copy_lval_ref_<U>::template type, util::copy_indirect_<T>::template type> { };
+	template<typename T, typename U> struct copy_indirect_lval_ref : eval<T, remove_indirect, copy_lval_ref_<U>::template type, copy_indirect_<T>::template type> { };
 	template<typename T, typename U> using copy_indirect_lval_ref_t = typename copy_indirect_lval_ref<T, U>::type;
 	
-	template<typename T, typename U> struct copy_indirect_rval_ref : util::eval<T, util::remove_indirect, util::copy_rval_ref_<U>::template type, util::copy_indirect_<T>::template type> { };
+	template<typename T, typename U> struct copy_indirect_rval_ref : eval<T, remove_indirect, copy_rval_ref_<U>::template type, copy_indirect_<T>::template type> { };
 	template<typename T, typename U> using copy_indirect_rval_ref_t = typename copy_indirect_rval_ref<T, U>::type;
 
-	template<typename T, typename U> struct copy_indirect_ref : util::eval<T, util::remove_indirect, util::copy_ref_<U>::template type, util::copy_indirect_<T>::template type> { };
+	template<typename T, typename U> struct copy_indirect_ref : eval<T, remove_indirect, copy_ref_<U>::template type, copy_indirect_<T>::template type> { };
 	template<typename T, typename U> using copy_indirect_ref_t = typename copy_indirect_ref<T, U>::type;	
 
-	template<typename T, typename U> struct copy_indirect_cv : util::eval<T, util::remove_indirect, util::copy_cv_<U>::template type, util::copy_indirect_<T>::template type> { };
+	template<typename T, typename U> struct copy_indirect_cv : eval<T, remove_indirect, copy_cv_<U>::template type, copy_indirect_<T>::template type> { };
 	template<typename T, typename U> using copy_indirect_cv_t = typename copy_indirect_cv<T, U>::type;
 
-	template<typename T, typename U> struct copy_indirect_cvref : util::eval<T, util::remove_indirect, util::copy_cvref_<U>::template type, util::copy_indirect_<T>::template type> { };
+	template<typename T, typename U> struct copy_indirect_cvref : eval<T, remove_indirect, copy_cvref_<U>::template type, copy_indirect_<T>::template type> { };
 	template<typename T, typename U> using copy_indirect_cvref_t = typename copy_indirect_cvref<T, U>::type;
 }
 
 // propagate const/volatile/cv
-namespace util {
+namespace TUPLE_UTIL_NAMESPACE {
 	template<typename T, TRANSFORM ... Trans_Ts>
 	struct propagate_const : eval<T, Trans_Ts...> { };
 
@@ -241,7 +241,7 @@ namespace util {
 	using propagate_cv_each_t = typename propagate_cv_each<T, Trans_Ts...>::type;
 }
 
-namespace util::cmp {
+namespace TUPLE_UTIL_NAMESPACE::cmp {
 	template<typename LHS_T, typename RHS_T>
 	struct is_ignore_cvref_same : std::is_same<std::remove_cvref_t<LHS_T>, std::remove_cvref_t<RHS_T>> { };
 
@@ -292,7 +292,7 @@ namespace util::cmp {
 	static constexpr bool is_const_accessible_v = is_const_accessible<LHS_T, RHS_T>::value;
 }
 
-namespace util::pred {
+namespace TUPLE_UTIL_NAMESPACE::pred {
 	template<typename T> struct is_ref_const : std::is_const<std::remove_reference_t<T>> { };
 	template<typename T> static constexpr bool is_ref_const_v = is_ref_const<T>::value;
 
