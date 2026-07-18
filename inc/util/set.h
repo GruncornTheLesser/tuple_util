@@ -3,8 +3,7 @@
 #include "util/macro.h"
 #include "util/predicate.h"
 #include "util/compare.h"
-#include <array>
-#include <algorithm>
+#include <utility>
 
 namespace TUPLE_UTIL_NAMESPACE::pred {
 	template<typename T, typename Tup, TUPLE_UTIL_COMPARE Same_T=std::is_same>
@@ -147,8 +146,6 @@ namespace TUPLE_UTIL_NAMESPACE {
 	template<typename Tup>
 	using reverse_t = typename reverse<Tup>::type;
 
-	static_assert(std::is_same_v<reverse_t<std::tuple<int, char, float>>, std::tuple<float, char, int>>);
-
 	template<typename Tup, typename ... Ts>
 	struct push_back;
 
@@ -212,6 +209,9 @@ namespace TUPLE_UTIL_NAMESPACE {
 
 
 	template<typename Tup>
+	struct pop_back;
+
+	template<typename Tup>
 	struct pop_back : subset<Tup, std::make_index_sequence<arg_count_v<Tup> - 1>> { };
 
 	template<typename Tup>
@@ -220,51 +220,54 @@ namespace TUPLE_UTIL_NAMESPACE {
 
 
 	namespace details {
-		template<typename Tup, TUPLE_UTIL_PREDICATE Pred_Tp, typename Ind>
+		template<typename In, TUPLE_UTIL_PREDICATE Pred_Tp, typename Out = TUPLE_UTIL_DEFAULT_CONTAINER<>>
 		struct filter;
 
-		template<TUPLE_UTIL_CONTAINER Tup, typename ... Ts, TUPLE_UTIL_PREDICATE Pred_Tp, std::size_t ... Is>
-		struct filter<Tup<Ts...>, Pred_Tp, std::index_sequence<Is...>> {
-		private:
-			static constexpr std::pair<std::array<std::size_t, sizeof...(Ts)>, std::size_t> subrange = []{
-				std::array<std::size_t, sizeof...(Ts)> indices { Is... };
-				std::array<bool, sizeof...(Ts)> values { Pred_Tp<Ts>::value... };
-				return std::pair{ indices, std::remove_if(indices.begin(), indices.end(), 
-					[&](std::size_t i) { return !values[i]; }) - indices.begin() 
-				};
-			}();
-		public:
-			using type = subset_t<Tup<Ts...>, index_sequence_from_t<subrange.first, subrange.second>>;
-		};
+		template<TUPLE_UTIL_CONTAINER In, typename In_T, typename ... In_Ts, TUPLE_UTIL_PREDICATE Pred_Tp, TUPLE_UTIL_CONTAINER Out, typename ... Out_Ts>
+			requires (Pred_Tp<In_T>::value)
+		struct filter<In<In_T, In_Ts...>, Pred_Tp, Out<Out_Ts...>> : filter<In<In_Ts...>, Pred_Tp, Out<Out_Ts..., In_T>> { };
+
+		template<TUPLE_UTIL_CONTAINER In, typename In_T, typename ... In_Ts, TUPLE_UTIL_PREDICATE Pred_Tp, TUPLE_UTIL_CONTAINER Out, typename ... Out_Ts>
+			requires (!Pred_Tp<In_T>::value)
+		struct filter<In<In_T, In_Ts...>, Pred_Tp, Out<Out_Ts...>> : filter<In<In_Ts...>, Pred_Tp, Out<Out_Ts...>> { };
+
+		template<TUPLE_UTIL_CONTAINER In, TUPLE_UTIL_PREDICATE Pred_Tp, TUPLE_UTIL_CONTAINER Out, typename ... Out_Ts>
+		struct filter<In<>, Pred_Tp, Out<Out_Ts...>> { using type = In<Out_Ts...>; };
 	}
 
 	template<typename Tup, TUPLE_UTIL_PREDICATE Pred_Tp>
-	using filter = details::filter<Tup, Pred_Tp, std::make_index_sequence<arg_count_v<Tup>>>;
+	using filter = details::filter<Tup, Pred_Tp>;
 
 	template<TUPLE_UTIL_PREDICATE Pred_Tp>
 	struct filter_ { 
 		template<typename Tup> using type = filter<Tup, Pred_Tp>;
 		template<typename Tup> using inv =  filter<Tup, pred::negate_<Pred_Tp>::template type>;
 	};
-
-
-
+	
 	template<typename Tup, TUPLE_UTIL_PREDICATE Pred_Tp>
 	using filter_t = typename filter<Tup, Pred_Tp>::type;
 
 
+	
+	
+	namespace details {
+		template<typename Tup, TUPLE_UTIL_PREDICATE Pred_Tp, std::size_t N = 0>
+		struct find;
 
+		template<TUPLE_UTIL_CONTAINER Tup, typename T, typename ... Ts, TUPLE_UTIL_PREDICATE Pred_Tp, std::size_t N>
+			requires (!Pred_Tp<T>::value)
+		struct find<Tup<T, Ts...>, Pred_Tp, N> : find<Tup<Ts...>, Pred_Tp, N + 1> { };
+	
+		template<TUPLE_UTIL_CONTAINER Tup, typename T, typename ... Ts, TUPLE_UTIL_PREDICATE Pred_Tp, std::size_t N>
+			requires (Pred_Tp<T>::value)
+		struct find<Tup<T, Ts...>, Pred_Tp, N> { using type = T; static constexpr std::size_t value = N; };
+
+		template<TUPLE_UTIL_CONTAINER Tup, TUPLE_UTIL_PREDICATE Pred_Tp, std::size_t N>
+		struct find<Tup<>, Pred_Tp, N> { static constexpr std::size_t value = N; };
+	}
+	
 	template<typename Tup, TUPLE_UTIL_PREDICATE Pred_Tp>
-	struct find;
-
-	template<TUPLE_UTIL_CONTAINER Tup, typename ... Ts, TUPLE_UTIL_PREDICATE Pred_Tp>
-	struct find<Tup<Ts...>, Pred_Tp> { 
-	private:
-		static constexpr std::array<bool, sizeof...(Ts)> values { Pred_Tp<Ts>::value... };
-	public:
-		static constexpr std::size_t value = std::find(values.begin(), values.end(), true) - values.begin();
-		using type = typename arg_at<value, Tup<Ts...>>::type;
-	};
+	using find = details::find<Tup, Pred_Tp>;
 	
 	template<TUPLE_UTIL_PREDICATE Pred_Tp>
 	struct find_ { template<typename Tup> using type = find<Tup, Pred_Tp>; };
@@ -277,44 +280,67 @@ namespace TUPLE_UTIL_NAMESPACE {
 
 
 
+	namespace details {
+		template<typename Tup, TUPLE_UTIL_ATTRIBUTER Get_Tp, typename M_type, std::size_t M_value, std::size_t N>
+		struct min;
 
+		template<TUPLE_UTIL_CONTAINER Tup, typename T, typename ... Ts, TUPLE_UTIL_ATTRIBUTER Get_Tp, typename M_type, std::size_t M_value, std::size_t N>
+			requires(Get_Tp<T>::value < Get_Tp<M_type>::value)
+		struct min<Tup<T, Ts...>, Get_Tp, M_type, M_value, N> : min<Tup<Ts...>, Get_Tp, T, N, N + 1> { };
+
+		template<TUPLE_UTIL_CONTAINER Tup, typename T, typename ... Ts, TUPLE_UTIL_ATTRIBUTER Get_Tp, typename M_type, std::size_t M_value, std::size_t N>
+			requires(!(Get_Tp<T>::value < Get_Tp<M_type>::value))
+		struct min<Tup<T, Ts...>, Get_Tp, M_type, M_value, N> : min<Tup<Ts...>, Get_Tp, M_type, M_value, N + 1> { };
+
+		template<TUPLE_UTIL_CONTAINER Tup, TUPLE_UTIL_ATTRIBUTER Get_Tp, typename M_type, std::size_t M_value, std::size_t N>
+		struct min<Tup<>, Get_Tp, M_type, M_value, N> { using type = M_type; static constexpr auto value = M_value; };
+	}
 	template<typename Tup, TUPLE_UTIL_ATTRIBUTER Get_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
-	struct find_min;
+	struct min;
+
+	template<TUPLE_UTIL_CONTAINER Tup, typename T, typename ... Ts, TUPLE_UTIL_ATTRIBUTER Get_Tp>
+	struct min<Tup<T, Ts...>, Get_Tp> : details::min<Tup<Ts...>, Get_Tp, T, 0, 1> { };
 
 	template<TUPLE_UTIL_ATTRIBUTER Get_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
-	struct find_min_ { template<typename Tup> using type = find_min<Tup, Get_Tp>; };
+	struct min_ { template<typename Tup> using type = min<Tup, Get_Tp>; };
 
 	template<typename Tup, TUPLE_UTIL_ATTRIBUTER Get_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
-	using find_min_t = typename find_min<Tup, Get_Tp>::type;
-
-	template<TUPLE_UTIL_CONTAINER Tup, typename ... Ts, TUPLE_UTIL_ATTRIBUTER Get_Tp>
-	struct find_min<Tup<Ts...>, Get_Tp> {
-	private:
-		using value_type = decltype(Get_Tp<arg_at_t<0, Tup<Ts...>>>::value);
-		static constexpr std::array<value_type, sizeof...(Ts)> values { Get_Tp<Ts>::value... };
-	public:
-		static constexpr std::size_t value = std::ranges::min_element(values) - values.begin();
-	};
-
-
+	using min_t = typename min<Tup, Get_Tp>::type;
 
 	template<typename Tup, TUPLE_UTIL_ATTRIBUTER Get_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
-	struct find_max;
+	static constexpr std::size_t min_v = min<Tup, Get_Tp>::value;
+
+
+
+	namespace details {
+		template<typename Tup, TUPLE_UTIL_ATTRIBUTER Get_Tp, typename M_type, std::size_t M_value, std::size_t N>
+		struct max;
+
+		template<TUPLE_UTIL_CONTAINER Tup, typename T, typename ... Ts, TUPLE_UTIL_ATTRIBUTER Get_Tp, typename M_type, std::size_t M_value, std::size_t N>
+			requires(Get_Tp<T>::value > Get_Tp<M_type>::value)
+		struct max<Tup<T, Ts...>, Get_Tp, M_type, M_value, N> : max<Tup<Ts...>, Get_Tp, T, N, N + 1> { };
+
+		template<TUPLE_UTIL_CONTAINER Tup, typename T, typename ... Ts, TUPLE_UTIL_ATTRIBUTER Get_Tp, typename M_type, std::size_t M_value, std::size_t N>
+			requires(!(Get_Tp<T>::value > Get_Tp<M_type>::value))
+		struct max<Tup<T, Ts...>, Get_Tp, M_type, M_value, N> : max<Tup<Ts...>, Get_Tp, M_type, M_value, N + 1> { };
+
+		template<TUPLE_UTIL_CONTAINER Tup, TUPLE_UTIL_ATTRIBUTER Get_Tp, typename M_type, std::size_t M_value, std::size_t N>
+		struct max<Tup<>, Get_Tp, M_type, M_value, N> { using type = M_type; static constexpr auto value = M_value; };
+	}
+	template<typename Tup, TUPLE_UTIL_ATTRIBUTER Get_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
+	struct max;
+
+	template<TUPLE_UTIL_CONTAINER Tup, typename T, typename ... Ts, TUPLE_UTIL_ATTRIBUTER Get_Tp>
+	struct max<Tup<T, Ts...>, Get_Tp> : details::max<Tup<Ts...>, Get_Tp, T, 0, 1> { };
 
 	template<TUPLE_UTIL_ATTRIBUTER Get_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
-	struct find_max_ { template<typename Tup> using type = find_max<Tup, Get_Tp>; };
+	struct max_ { template<typename Tup> using type = max<Tup, Get_Tp>; };
 
 	template<typename Tup, TUPLE_UTIL_ATTRIBUTER Get_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
-	using find_max_t = typename find_max<Tup, Get_Tp>::type;
+	using max_t = typename max<Tup, Get_Tp>::type;
 
-	template<TUPLE_UTIL_CONTAINER Tup, typename ... Ts, TUPLE_UTIL_ATTRIBUTER Get_Tp>
-	struct find_max<Tup<Ts...>, Get_Tp> {
-	private:
-		using value_type = decltype(Get_Tp<arg_at_t<0, Tup<Ts...>>>::value);
-		static constexpr std::array<value_type, sizeof...(Ts)> values { Get_Tp<Ts>::value... };
-	public:
-		static constexpr std::size_t value = std::ranges::max_element(values) - values.begin();
-	};
+	template<typename Tup, TUPLE_UTIL_ATTRIBUTER Get_Tp=TUPLE_UTIL_DEFAULT_ATTRIBUTER>
+	static constexpr std::size_t max_v = max<Tup, Get_Tp>::value;
 	
 
 
