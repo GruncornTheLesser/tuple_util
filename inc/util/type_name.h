@@ -22,14 +22,16 @@
 #define STRINGIFY_IMPL(X) #X
 #define STRINGIFY(X) STRINGIFY_IMPL(X)
 
-namespace TUPLE_UTIL_NAMESPACE { // NOTE: when changing the namespace of this func you must update the macros for pretty function
+namespace TUPLE_UTIL_NAMESPACE {
 	template<typename T> constexpr std::basic_string_view<char> type_name() {
 		std::size_t prefix_length = sizeof(STRINGIFY(TUPLE_UTIL_NAMESPACE)) - 1 + sizeof(PF_PREFIX) - 1;
 		std::size_t suffix_length = sizeof(PF_SUFFIX) - 1;
-
-		return { PF_CMD + prefix_length, sizeof(PF_CMD) - prefix_length - suffix_length - 1 };
+		std::size_t command_length = sizeof(PF_CMD) - 1;
+		return { PF_CMD + prefix_length, command_length - prefix_length - suffix_length };
 	}
+	
 	template<typename T> struct get_type_name { static constexpr std::basic_string_view<char> value = type_name<T>(); };
+	template<typename T> static constexpr std::basic_string_view<char> get_type_name_v = get_type_name<T>::value; 
 }
 #undef PF_CMD
 #undef PF_PREFIX
