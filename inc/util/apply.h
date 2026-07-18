@@ -4,22 +4,22 @@
 namespace TUPLE_UTIL_NAMESPACE::details { 
     template<typename Tup, typename Func_T, typename ... Arg_Ts, std::size_t ... Is> 
     inline constexpr decltype(auto) apply(Func_T&& func, std::index_sequence<Is...> ind, Arg_Ts&& ... args) {
-        return func.template operator()<arg_at_t<Is, Tup>...>();
+        return func.template operator()<arg_at_t<Is, Tup>...>(std::forward<Arg_Ts>(args)...);
     }
 }
 
 namespace TUPLE_UTIL_NAMESPACE {
-    template<typename Func, CONTAINER tup=TUPLE_UTIL_DEFAULT_CONTAINER>
+    template<typename Func, TUPLE_UTIL_CONTAINER tup=TUPLE_UTIL_DEFAULT_CONTAINER>
 	struct get_func_args;
-	template<class T, CONTAINER tup, typename ... Dom_Ts>
+	template<class T, TUPLE_UTIL_CONTAINER tup, typename ... Dom_Ts>
 	struct get_func_args<void(T::*)(const Dom_Ts&...), tup> {
 		using type = tup<Dom_Ts...>;
 	};
-    template<CONTAINER tup>
+    template<TUPLE_UTIL_CONTAINER tup>
 	struct get_func_args_ {
         template<typename Func> using type = get_func_args<Func, tup>;
     };
-    template<typename Func, CONTAINER tup=TUPLE_UTIL_DEFAULT_CONTAINER>
+    template<typename Func, TUPLE_UTIL_CONTAINER tup=TUPLE_UTIL_DEFAULT_CONTAINER>
 	using get_func_args_t = get_func_args<Func, tup>::type;
 	
 

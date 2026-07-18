@@ -4,13 +4,13 @@ metaprogramming library for people who dont like coding in c++ and would instead
 ## syntax construction
 macros are used to define additional types of template parameter
 ```c++
-#define ATTRIBUTER template<typename> typename          // has a 'value'. eg std::tuple_size
-#define TRANSFORM template<typename> typename           // has a 'type'. eg std::add_const
-#define PREDICATE template<typename> typename           // has bool 'value'. eg std::is_const
-#define COMPARE template<typename, typename> typename   // has bool 'value'. eg std::is_same
-#define CONTAINER template<typename...> typename        // has multiple args 'Ts...'. eg std::tuple
+#define TUPLE_UTIL_ATTRIBUTER template<typename> typename          // has a 'value'. eg std::tuple_size
+#define TUPLE_UTIL_TRANSFORM template<typename> typename           // has a 'type'. eg std::add_const
+#define TUPLE_UTIL_PREDICATE template<typename> typename           // has bool 'value'. eg std::is_const
+#define TUPLE_UTIL_COMPARE template<typename, typename> typename   // has bool 'value'. eg std::is_same
+#define TUPLE_UTIL_CONTAINER template<typename...> typename        // has multiple args 'Ts...'. eg std::tuple
 
-template<typename T, TRANSFORM Trans_Tp> struct eval_foobar { ... };
+template<typename T, TUPLE_UTIL_TRANSFORM Trans_Tp> struct eval_foobar { ... };
 using foobar = typename eval_foobar<int, std::add_const>::type; 
 ```
 
@@ -26,6 +26,12 @@ template<typename T, typename ... Arg>
 using foobar_t = typename foobar::type;
 ```
 
+macros
+```
+#define TUPLE_UTIL_NAMESPACE util
+#define TUPLE_UTIL_DEFAULT_CONTAINER std::tuple /* some meta container eg template<typename ...> struct type_list { }; */
+#define TUPLE_UTIL_DEFAULT_ATTRIBUTER /* some default attributer template<typename T> struct getter { static constexpr auto value = T::value; }; */
+```
 
 ## code example
 ```c++

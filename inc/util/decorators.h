@@ -72,7 +72,7 @@ namespace TUPLE_UTIL_NAMESPACE
 	struct copy_cvref_ { template<typename T> using type = copy_cvref<T, U>; };
 }
 
-namespace pred {
+namespace TUPLE_UTIL_NAMESPACE::pred {
 	template <typename T>
 	struct is_indirect : std::disjunction<std::is_pointer<T>, std::is_reference<T>> {};
 	template <typename T>
@@ -101,9 +101,9 @@ namespace TUPLE_UTIL_NAMESPACE {
 	template<typename U>
 	struct copy_indirect_ { template<typename T> using type = copy_indirect<T, U>; };
 
-	template<typename T, TRANSFORM Trans_T> struct eval_indirect : eval<T, remove_indirect, Trans_T, copy_indirect_<T>::template type>  { };
-	template<typename T, TRANSFORM Trans_T> using eval_indirect_t = typename eval_indirect<T, Trans_T>::type;
-	template<TRANSFORM Trans_T> struct eval_indirect_ { template<typename T> using type = eval_indirect<T, Trans_T>; };
+	template<typename T, TUPLE_UTIL_TRANSFORM Trans_T> struct eval_indirect : eval<T, remove_indirect, Trans_T, copy_indirect_<T>::template type>  { };
+	template<typename T, TUPLE_UTIL_TRANSFORM Trans_T> using eval_indirect_t = typename eval_indirect<T, Trans_T>::type;
+	template<TUPLE_UTIL_TRANSFORM Trans_T> struct eval_indirect_ { template<typename T> using type = eval_indirect<T, Trans_T>; };
 
 	template<typename T> struct add_indirect_const : eval_indirect<T, std::add_const> { };
 	template<typename T> using add_indirect_const_t = typename add_indirect_const<T>::type;
@@ -144,100 +144,100 @@ namespace TUPLE_UTIL_NAMESPACE {
 
 // propagate const/volatile/cv
 namespace TUPLE_UTIL_NAMESPACE {
-	template<typename T, TRANSFORM ... Trans_Ts>
+	template<typename T, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	struct propagate_const : eval<T, Trans_Ts...> { };
 
-	template<typename T, TRANSFORM ... Trans_Ts>
+	template<typename T, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	struct propagate_const<const T, Trans_Ts...> : eval<const T, Trans_Ts..., std::add_const> { };
 
-	template<TRANSFORM ... Trans_Ts>
+	template<TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	struct propagate_const_ { template<typename T> using type = propagate_const<T, Trans_Ts...>; };
 
-	template<typename T, TRANSFORM ... Trans_Ts>
+	template<typename T, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	using propagate_const_t = typename propagate_const<T, Trans_Ts...>::type;
 
 
 
-	template<typename T, TRANSFORM ... Trans_Ts>
+	template<typename T, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	struct propagate_const_each : eval<T, Trans_Ts...> { };
 
-	template<typename T, TRANSFORM ... Trans_Ts>
+	template<typename T, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	struct propagate_const_each<const T, Trans_Ts...> : eval<const T, Trans_Ts..., eval_each_<std::add_const>::template type> { };
 
-	template<TRANSFORM ... Trans_Ts>
+	template<TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	struct propagate_const_each_ { template<typename T> using type = propagate_const_each<T, Trans_Ts...>; };
 
-	template<typename T, TRANSFORM ... Trans_Ts>
+	template<typename T, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	using propagate_const_each_t = typename propagate_const_each<T, Trans_Ts...>::type;
 
 
 
-	template<typename T, TRANSFORM ... Trans_Ts>
+	template<typename T, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	struct propagate_volatile : eval<T, Trans_Ts...> { };
 
-	template<typename T, TRANSFORM ... Trans_Ts>
+	template<typename T, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	struct propagate_volatile<volatile T, Trans_Ts...> : eval<volatile T, Trans_Ts..., std::add_volatile> { };
 
-	template<TRANSFORM ... Trans_Ts>
+	template<TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	struct propagate_volatile_ { template<typename T> using type = propagate_volatile<T, Trans_Ts...>; };
 
-	template<typename T, TRANSFORM ... Trans_Ts>
+	template<typename T, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	using propagate_volatile_t = typename propagate_volatile<T, Trans_Ts...>::type;
 
 
 
-	template<typename T, TRANSFORM ... Trans_Ts>
+	template<typename T, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	struct propagate_volatile_each : eval<T, Trans_Ts...> { };
 
-	template<typename T, TRANSFORM ... Trans_Ts>
+	template<typename T, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	struct propagate_volatile_each<volatile T, Trans_Ts...> : eval<volatile T, Trans_Ts..., eval_each_<std::add_volatile>::template type> { };
 
-	template<TRANSFORM ... Trans_Ts>
+	template<TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	struct propagate_volatile_each_ { template<typename T> using type = propagate_volatile_each<T, Trans_Ts...>; };
 
-	template<typename T, TRANSFORM ... Trans_Ts>
+	template<typename T, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	using propagate_volatile_each_t = typename propagate_volatile_each<T, Trans_Ts...>::type;
 
 
 
-	template<typename T, TRANSFORM ... Trans_Ts>
+	template<typename T, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	struct propagate_cv :eval<T, Trans_Ts...> { };
 
-	template<typename T, TRANSFORM ... Trans_Ts>
+	template<typename T, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	struct propagate_cv<const T, Trans_Ts...> : eval<T, Trans_Ts..., std::add_const> { };
 
-	template<typename T, TRANSFORM ... Trans_Ts>
+	template<typename T, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	struct propagate_cv<volatile T, Trans_Ts...> : eval<T, Trans_Ts..., std::add_volatile> { };
 
-	template<typename T, TRANSFORM ... Trans_Ts>
+	template<typename T, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	struct propagate_cv<const volatile T, Trans_Ts...> : eval<T, Trans_Ts..., std::add_const, std::add_volatile> { };
 
-	template<TRANSFORM ... Trans_Ts>
+	template<TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	struct propagate_cv_ { template<typename T> using type = propagate_cv<T, Trans_Ts...>; };
 
-	template<typename T, TRANSFORM ... Trans_Ts>
+	template<typename T, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	using propagate_cv_t = typename propagate_cv<T, Trans_Ts...>::type;
 
 
 
-	template<typename T, TRANSFORM ... Trans_Ts>
+	template<typename T, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	struct propagate_cv_each : eval<T, Trans_Ts...> { };
 
-	template<typename T, TRANSFORM ... Trans_Ts>
+	template<typename T, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	struct propagate_cv_each<const T, Trans_Ts...> : eval<T, Trans_Ts..., std::add_const> { };
 
-	template<typename T, TRANSFORM ... Trans_Ts>
+	template<typename T, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	struct propagate_cv_each<volatile T, Trans_Ts...> : eval<T, Trans_Ts..., std::add_volatile> { };
 
-	template<typename T, TRANSFORM ... Trans_Ts>
+	template<typename T, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	struct propagate_cv_each<const volatile T, Trans_Ts...> : eval<T, Trans_Ts..., std::add_const, std::add_volatile> { };
 
 
 
-	template<TRANSFORM ... Trans_Ts>
+	template<TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	struct propagate_cv_each_ { template<typename T> using type = propagate_cv_each<T, Trans_Ts...>; };
 
-	template<typename T, TRANSFORM ... Trans_Ts>
+	template<typename T, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	using propagate_cv_each_t = typename propagate_cv_each<T, Trans_Ts...>::type;
 }
 
