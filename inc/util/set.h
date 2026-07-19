@@ -431,7 +431,7 @@ namespace TUPLE_UTIL_NAMESPACE {
 		pred::element_of_<Tup2, Same_T>::template type
 	>::template type> { };
 
-	template<TUPLE_UTIL_COMPARE Same_T, typename Set_T>
+	template<typename Set_T, TUPLE_UTIL_COMPARE Same_T=std::is_same>
 	struct set_intersect_ {
 		template<typename Tup> using type = set_intersect<Tup, Set_T, Same_T>;
 		template<typename Tup> using inv =  set_intersect<Tup, Set_T, cmp::negate_<Same_T>::template type>;
