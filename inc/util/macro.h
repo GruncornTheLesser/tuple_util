@@ -8,6 +8,9 @@
 #ifndef TUPLE_UTIL_DEFAULT_ATTRIBUTER
 #define TUPLE_UTIL_DEFAULT_ATTRIBUTER get_value
 #endif
+#ifndef TUPLE_UTIL_DEFAULT_COMPARE
+#define TUPLE_UTIL_DEFAULT_COMPARE std::is_same
+#endif
 
 #define TUPLE_UTIL_CONTAINER template<typename...> typename // has n type args... eg std::tuple
 #define TUPLE_UTIL_ATTRIBUTER template<typename> typename // describes an attribute of a class. eg std::tuple_size

@@ -1,6 +1,6 @@
 #pragma once
 #include "util/set.h"
-#include <utility>
+
 namespace TUPLE_UTIL_NAMESPACE::details { 
     template<typename Tup, typename Func_T, typename ... Arg_Ts, std::size_t ... Is> 
     inline constexpr decltype(auto) apply(Func_T&& func, std::index_sequence<Is...> ind, Arg_Ts&& ... args) {

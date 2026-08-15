@@ -6,28 +6,30 @@
 #include <utility>
 
 namespace TUPLE_UTIL_NAMESPACE::pred {
-	template<typename T, typename Tup, TUPLE_UTIL_COMPARE Same_T=std::is_same>
+	template<typename T, typename Tup, TUPLE_UTIL_COMPARE Same_T=TUPLE_UTIL_DEFAULT_COMPARE>
 	struct element_of;
 
 	template<typename T, TUPLE_UTIL_CONTAINER Tup, typename ... Ts, TUPLE_UTIL_COMPARE Same_T>
-	struct element_of<T, Tup<Ts...>, Same_T> : std::disjunction<Same_T<T, Ts>...> { };
+	struct element_of<T, Tup<Ts...>, Same_T> { 
+		static constexpr bool value = (Same_T<T, Ts>::value || ...);
+	};
 
-	template<typename Tup, TUPLE_UTIL_COMPARE Cmp_T = std::is_same>
+	template<typename Tup, TUPLE_UTIL_COMPARE Cmp_T = TUPLE_UTIL_DEFAULT_COMPARE>
 	struct element_of_ {
 		template<typename T> using type = element_of<T, Tup, Cmp_T>;
-		template<typename T> using inv =  std::negation<type<T>>;
+		template<typename T> using inv =  negate<T, type>;
 	};
 
-	template<typename T, TUPLE_UTIL_COMPARE Cmp_T = std::is_same>
+	template<typename T, TUPLE_UTIL_COMPARE Cmp_T = TUPLE_UTIL_DEFAULT_COMPARE>
 	struct contains_ {
 		template<typename Tup> using type = element_of<T, Tup>;
-		template<typename Tup> using inv =  std::negation<type<Tup>>;
+		template<typename Tup> using inv =  negate<T, type>;
 	};
 
-	template<typename T, typename Tup, TUPLE_UTIL_COMPARE Same_T = std::is_same>
+	template<typename T, typename Tup, TUPLE_UTIL_COMPARE Same_T = TUPLE_UTIL_DEFAULT_COMPARE>
 	static constexpr bool element_of_v = element_of<T, Tup, Same_T>::value;
 
-	template<typename Tup, typename T, TUPLE_UTIL_COMPARE Same_T = std::is_same>
+	template<typename Tup, typename T, TUPLE_UTIL_COMPARE Same_T = TUPLE_UTIL_DEFAULT_COMPARE>
 	static constexpr bool contains_v = element_of<T, Tup, Same_T>::value;
 }
 
@@ -72,6 +74,20 @@ namespace TUPLE_UTIL_NAMESPACE {
 
 	template<typename Tup>
 	using arg_back_t = typename arg_back<Tup>::type;
+
+
+
+	template<typename Tup>
+	struct clear;
+
+	template<TUPLE_UTIL_CONTAINER Tup, typename ... Ts>
+	struct clear<Tup<Ts...>> {
+		using type = Tup<>;
+	};
+
+	template<typename Tup>
+	using clear_t = typename clear<Tup>::type;
+
 
 
 
@@ -128,7 +144,7 @@ namespace TUPLE_UTIL_NAMESPACE {
 
 	
 	namespace details {
-		template<typename TupIn, typename TupOut = TUPLE_UTIL_DEFAULT_CONTAINER<>>
+		template<typename TupIn, typename TupOut>
 		struct reverse;
 
 		template<TUPLE_UTIL_CONTAINER In, typename In_T, typename ... In_Ts, TUPLE_UTIL_CONTAINER Out, typename ... Out_Ts>
@@ -141,7 +157,7 @@ namespace TUPLE_UTIL_NAMESPACE {
 	}
 	
 	template<typename Tup>
-	using reverse = details::reverse<Tup>;
+	using reverse = details::reverse<Tup, clear_t<Tup>>;
 
 	template<typename Tup>
 	using reverse_t = typename reverse<Tup>::type;
@@ -220,23 +236,23 @@ namespace TUPLE_UTIL_NAMESPACE {
 
 
 	namespace details {
-		template<typename In, TUPLE_UTIL_PREDICATE Pred_Tp, typename Out = TUPLE_UTIL_DEFAULT_CONTAINER<>>
+		template<typename In, TUPLE_UTIL_PREDICATE Pred_Tp, typename Out>
 		struct filter;
 
-		template<TUPLE_UTIL_CONTAINER In, typename In_T, typename ... In_Ts, TUPLE_UTIL_PREDICATE Pred_Tp, TUPLE_UTIL_CONTAINER Out, typename ... Out_Ts>
+		template<TUPLE_UTIL_CONTAINER Tp, typename In_T, typename ... In_Ts, TUPLE_UTIL_PREDICATE Pred_Tp, typename ... Out_Ts>
 			requires (Pred_Tp<In_T>::value)
-		struct filter<In<In_T, In_Ts...>, Pred_Tp, Out<Out_Ts...>> : filter<In<In_Ts...>, Pred_Tp, Out<Out_Ts..., In_T>> { };
+		struct filter<Tp<In_T, In_Ts...>, Pred_Tp, Tp<Out_Ts...>> : filter<Tp<In_Ts...>, Pred_Tp, Tp<Out_Ts..., In_T>> { };
 
-		template<TUPLE_UTIL_CONTAINER In, typename In_T, typename ... In_Ts, TUPLE_UTIL_PREDICATE Pred_Tp, TUPLE_UTIL_CONTAINER Out, typename ... Out_Ts>
+		template<TUPLE_UTIL_CONTAINER Tp, typename In_T, typename ... In_Ts, TUPLE_UTIL_PREDICATE Pred_Tp, typename ... Out_Ts>
 			requires (!Pred_Tp<In_T>::value)
-		struct filter<In<In_T, In_Ts...>, Pred_Tp, Out<Out_Ts...>> : filter<In<In_Ts...>, Pred_Tp, Out<Out_Ts...>> { };
+		struct filter<Tp<In_T, In_Ts...>, Pred_Tp, Tp<Out_Ts...>> : filter<Tp<In_Ts...>, Pred_Tp, Tp<Out_Ts...>> { };
 
-		template<TUPLE_UTIL_CONTAINER In, TUPLE_UTIL_PREDICATE Pred_Tp, TUPLE_UTIL_CONTAINER Out, typename ... Out_Ts>
-		struct filter<In<>, Pred_Tp, Out<Out_Ts...>> { using type = In<Out_Ts...>; };
+		template<TUPLE_UTIL_CONTAINER Tp, TUPLE_UTIL_PREDICATE Pred_Tp, typename ... Out_Ts>
+		struct filter<Tp<>, Pred_Tp, Tp<Out_Ts...>> { using type = Tp<Out_Ts...>; };
 	}
 
 	template<typename Tup, TUPLE_UTIL_PREDICATE Pred_Tp>
-	using filter = details::filter<Tup, Pred_Tp>;
+	using filter = details::filter<Tup, Pred_Tp, clear_t<Tup>>;
 
 	template<TUPLE_UTIL_PREDICATE Pred_Tp>
 	struct filter_ { 
@@ -248,36 +264,82 @@ namespace TUPLE_UTIL_NAMESPACE {
 	using filter_t = typename filter<Tup, Pred_Tp>::type;
 
 
+
+	namespace details {
+		template<typename In, TUPLE_UTIL_PREDICATE Pred_Tp, typename LHS, typename RHS>
+		struct partition;
+
+		template<TUPLE_UTIL_CONTAINER Tp, typename In_T, typename ... In_Ts, TUPLE_UTIL_PREDICATE Pred_Tp, typename ... L_Ts, typename ... R_Ts>
+			requires (Pred_Tp<In_T>::value)
+		struct partition<Tp<In_T, In_Ts...>, Pred_Tp, Tp<L_Ts...>, Tp<R_Ts...>> : partition<Tp<In_Ts...>, Pred_Tp, Tp<L_Ts..., In_T>, Tp<R_Ts...>> { };
+
+		template<TUPLE_UTIL_CONTAINER Tp, typename In_T, typename ... In_Ts, TUPLE_UTIL_PREDICATE Pred_Tp, typename ... L_Ts, typename ... R_Ts>
+			requires (!Pred_Tp<In_T>::value)
+		struct partition<Tp<In_T, In_Ts...>, Pred_Tp, Tp<L_Ts...>, Tp<R_Ts...>> : partition<Tp<In_Ts...>, Pred_Tp, Tp<L_Ts...>, Tp<R_Ts..., In_T>> { };
+
+		template<TUPLE_UTIL_CONTAINER Tp, TUPLE_UTIL_PREDICATE Pred_Tp, typename ... L_Ts, typename ... R_Ts>
+		struct partition<Tp<>, Pred_Tp, Tp<L_Ts...>, Tp<R_Ts...>> { using type = Tp<L_Ts..., R_Ts...>; };
+	}
+
+	template<typename Tup, TUPLE_UTIL_PREDICATE Pred_Tp>
+	using partition = details::partition<Tup, Pred_Tp, clear_t<Tup>, clear_t<Tup>>;
 	
+	template<TUPLE_UTIL_PREDICATE Pred_Tp>
+	struct partition_ { 
+		template<typename Tup> using type = partition<Tup, Pred_Tp>;
+		template<typename Tup> using inv =  partition<Tup, pred::negate_<Pred_Tp>::template type>;
+	};
 	
+	template<typename Tup, TUPLE_UTIL_PREDICATE Pred_Tp>
+	using partition_t = typename partition<Tup, Pred_Tp>::type;
+
+
+
 	namespace details {
 		template<typename Tup, TUPLE_UTIL_PREDICATE Pred_Tp, std::size_t N = 0>
-		struct find;
+		struct find_if;
 
 		template<TUPLE_UTIL_CONTAINER Tup, typename T, typename ... Ts, TUPLE_UTIL_PREDICATE Pred_Tp, std::size_t N>
 			requires (!Pred_Tp<T>::value)
-		struct find<Tup<T, Ts...>, Pred_Tp, N> : find<Tup<Ts...>, Pred_Tp, N + 1> { };
+		struct find_if<Tup<T, Ts...>, Pred_Tp, N> : find_if<Tup<Ts...>, Pred_Tp, N + 1> { };
 	
 		template<TUPLE_UTIL_CONTAINER Tup, typename T, typename ... Ts, TUPLE_UTIL_PREDICATE Pred_Tp, std::size_t N>
 			requires (Pred_Tp<T>::value)
-		struct find<Tup<T, Ts...>, Pred_Tp, N> { using type = T; static constexpr std::size_t value = N; };
+		struct find_if<Tup<T, Ts...>, Pred_Tp, N> { using type = T; static constexpr std::size_t value = N; };
 
 		template<TUPLE_UTIL_CONTAINER Tup, TUPLE_UTIL_PREDICATE Pred_Tp, std::size_t N>
-		struct find<Tup<>, Pred_Tp, N> { static constexpr std::size_t value = N; };
+		struct find_if<Tup<>, Pred_Tp, N> { static constexpr std::size_t value = N; };
 	}
 	
 	template<typename Tup, TUPLE_UTIL_PREDICATE Pred_Tp>
-	using find = details::find<Tup, Pred_Tp>;
+	using find_if = details::find_if<Tup, Pred_Tp>;
 	
 	template<TUPLE_UTIL_PREDICATE Pred_Tp>
-	struct find_ { template<typename Tup> using type = find<Tup, Pred_Tp>; };
+	struct find_if_ { template<typename Tup> using type = find_if<Tup, Pred_Tp>; };
 	
 	template<typename Tup, TUPLE_UTIL_PREDICATE Pred_Tp>
-	using find_t = typename find<Tup, Pred_Tp>::type;
+	using find_if_t = typename find_if<Tup, Pred_Tp>::type;
 
 	template<typename Tup, TUPLE_UTIL_PREDICATE Pred_Tp>
-	static constexpr unsigned int find_v = find<Tup, Pred_Tp>::value;
+	static constexpr unsigned int find_if_v = find_if<Tup, Pred_Tp>::value;
+	
 
+
+	template<typename Tup, typename T, TUPLE_UTIL_COMPARE Cmp_T=TUPLE_UTIL_DEFAULT_COMPARE>
+	using find = details::find_if<Tup, cmp::to_<T, Cmp_T>::template type>;
+
+	template<typename T, TUPLE_UTIL_COMPARE Cmp_T>
+	struct find_ {
+		template<typename Tup> using type = details::find_if<Tup, cmp::to_<T, Cmp_T>::template type>;
+		template<typename Tup> using inv = details::find_if<Tup, cmp::to_<T, Cmp_T>::template inv>;
+	};
+
+	template<typename Tup, typename T, TUPLE_UTIL_COMPARE Cmp_T=TUPLE_UTIL_DEFAULT_COMPARE>
+	using find_t = typename find<Tup, T, Cmp_T>::type;
+
+	template<typename Tup, typename T, TUPLE_UTIL_COMPARE Cmp_T=TUPLE_UTIL_DEFAULT_COMPARE>
+	static constexpr unsigned int find_v = find<Tup, T, Cmp_T>::value;
+	
 
 
 	namespace details {
@@ -376,10 +438,10 @@ namespace TUPLE_UTIL_NAMESPACE {
 
 
 
-	template<typename Tup, TUPLE_UTIL_COMPARE Same_T=std::is_same>
+	template<typename Tup, TUPLE_UTIL_COMPARE Same_T=TUPLE_UTIL_DEFAULT_COMPARE>
 	struct unique;
 
-	template<typename Tup, TUPLE_UTIL_COMPARE Same_T=std::is_same>
+	template<typename Tup, TUPLE_UTIL_COMPARE Same_T=TUPLE_UTIL_DEFAULT_COMPARE>
 	using unique_t = typename unique<Tup, Same_T>::type;
 
 	template<TUPLE_UTIL_CONTAINER Tup, typename T, typename ... Ts, TUPLE_UTIL_COMPARE Same_T>
@@ -389,7 +451,7 @@ namespace TUPLE_UTIL_NAMESPACE {
 	template<TUPLE_UTIL_CONTAINER Tup, TUPLE_UTIL_COMPARE Same_T>
 	struct unique<Tup<>, Same_T> { using type = Tup<>; };
 
-	template<TUPLE_UTIL_COMPARE Same_T=std::is_same>
+	template<TUPLE_UTIL_COMPARE Same_T=TUPLE_UTIL_DEFAULT_COMPARE>
 	struct unique_ { template<typename Tup> using type = unique<Tup, Same_T>; };
 
 
@@ -404,25 +466,26 @@ namespace TUPLE_UTIL_NAMESPACE {
 	struct unique_priority_ { template<typename Tup> using type = unique_priority<Tup, Same_T, Priority_T>; };
 
 
-	template<typename Tup1, typename Tup2 = TUPLE_UTIL_DEFAULT_CONTAINER<>, TUPLE_UTIL_COMPARE Same_T = std::is_same>
+
+	template<typename Tup1, typename Tup2, TUPLE_UTIL_COMPARE Same_T = TUPLE_UTIL_DEFAULT_COMPARE>
 	struct set_union;
 
-	template<typename Tup, typename Set_T, TUPLE_UTIL_COMPARE Same_T = std::is_same>
+	template<typename Tup, typename Set_T, TUPLE_UTIL_COMPARE Same_T = TUPLE_UTIL_DEFAULT_COMPARE>
 	using set_union_t = typename set_union<Tup, Set_T, Same_T>::type;
 
 	template<typename Tup1, typename Tup2, TUPLE_UTIL_COMPARE Same_T>
 	struct set_union : unique<concat_t<TUPLE_UTIL_DEFAULT_CONTAINER<Tup1, Tup2>>, Same_T> { };
 
-	template<typename Set_T, TUPLE_UTIL_COMPARE Same_T = std::is_same>
+	template<typename Set_T, TUPLE_UTIL_COMPARE Same_T = TUPLE_UTIL_DEFAULT_COMPARE>
 	struct set_union_ { template<typename Tup> using type = set_union<Tup, Set_T, Same_T>; };
 
 
 
 	
-	template<typename Tup1, typename Tup2, TUPLE_UTIL_COMPARE Same_T = std::is_same>
+	template<typename Tup1, typename Tup2, TUPLE_UTIL_COMPARE Same_T = TUPLE_UTIL_DEFAULT_COMPARE>
 	struct set_intersect;
 
-	template<typename Tup, typename Set_T, TUPLE_UTIL_COMPARE Same_T = std::is_same>
+	template<typename Tup, typename Set_T, TUPLE_UTIL_COMPARE Same_T = TUPLE_UTIL_DEFAULT_COMPARE>
 	using set_intersect_t = typename set_intersect<Tup, Set_T, Same_T>::type;
 
 	template<typename Tup1, typename Tup2, TUPLE_UTIL_COMPARE Same_T>
@@ -431,7 +494,7 @@ namespace TUPLE_UTIL_NAMESPACE {
 		pred::element_of_<Tup2, Same_T>::template type
 	>::template type> { };
 
-	template<typename Set_T, TUPLE_UTIL_COMPARE Same_T=std::is_same>
+	template<typename Set_T, TUPLE_UTIL_COMPARE Same_T=TUPLE_UTIL_DEFAULT_COMPARE>
 	struct set_intersect_ {
 		template<typename Tup> using type = set_intersect<Tup, Set_T, Same_T>;
 		template<typename Tup> using inv =  set_intersect<Tup, Set_T, cmp::negate_<Same_T>::template type>;
@@ -440,21 +503,21 @@ namespace TUPLE_UTIL_NAMESPACE {
 
 // [ ] subset/superset
 namespace TUPLE_UTIL_NAMESPACE::pred {
-	template<typename SubSet_T, typename SuperSet_T, TUPLE_UTIL_COMPARE Same_T=std::is_same>
+	template<typename SubSet_T, typename SuperSet_T, TUPLE_UTIL_COMPARE Same_T=TUPLE_UTIL_DEFAULT_COMPARE>
 	struct is_subset : allof<SubSet_T, element_of_<SuperSet_T, Same_T>::template type> { };
-	template<typename SubSet_T, typename SuperSet_T, TUPLE_UTIL_COMPARE Same_T=std::is_same>
+	template<typename SubSet_T, typename SuperSet_T, TUPLE_UTIL_COMPARE Same_T=TUPLE_UTIL_DEFAULT_COMPARE>
 	static constexpr bool is_subset_v = is_subset<SubSet_T, SuperSet_T, Same_T>::value;
-	template<typename SuperSet_T, TUPLE_UTIL_COMPARE Same_T=std::is_same>
+	template<typename SuperSet_T, TUPLE_UTIL_COMPARE Same_T=TUPLE_UTIL_DEFAULT_COMPARE>
 	struct is_subset_ {
 		template<typename SubSet_T> using type = is_subset<SubSet_T, SuperSet_T, Same_T>;
 		template<typename SubSet_T> using inv =  std::negation<type<SubSet_T>>;
 	};
 
-	template<typename SuperSet_T, typename SubSet_T, TUPLE_UTIL_COMPARE Same_T=std::is_same>
+	template<typename SuperSet_T, typename SubSet_T, TUPLE_UTIL_COMPARE Same_T=TUPLE_UTIL_DEFAULT_COMPARE>
 	struct is_superset : allof<SuperSet_T, element_of_<SubSet_T, Same_T>::template type> { };
-	template<typename SuperSet_T, typename SubSet_T, TUPLE_UTIL_COMPARE Same_T=std::is_same>
+	template<typename SuperSet_T, typename SubSet_T, TUPLE_UTIL_COMPARE Same_T=TUPLE_UTIL_DEFAULT_COMPARE>
 	static constexpr bool is_superset_v = is_superset<SuperSet_T, SubSet_T, Same_T>::value;
-	template<typename SubSet_T, TUPLE_UTIL_COMPARE Same_T=std::is_same>
+	template<typename SubSet_T, TUPLE_UTIL_COMPARE Same_T=TUPLE_UTIL_DEFAULT_COMPARE>
 	struct is_superset_ {
 		template<typename SuperSet_T> using type = is_superset<SuperSet_T, SubSet_T, Same_T>;
 		template<typename SuperSet_T> using inv =  std::negation<type<SuperSet_T>>;
@@ -462,9 +525,9 @@ namespace TUPLE_UTIL_NAMESPACE::pred {
 }
 
 namespace TUPLE_UTIL_NAMESPACE::cmp {
-	template<typename T1, typename T2, TUPLE_UTIL_COMPARE Cmp_T=std::is_same>
+	template<typename T1, typename T2, TUPLE_UTIL_COMPARE Cmp_T=TUPLE_UTIL_DEFAULT_COMPARE>
 	struct is_same_set;
-	template<typename T1, typename T2, TUPLE_UTIL_COMPARE Cmp_T=std::is_same>
+	template<typename T1, typename T2, TUPLE_UTIL_COMPARE Cmp_T=TUPLE_UTIL_DEFAULT_COMPARE>
 	static constexpr bool is_same_set_v = is_same_set<T1, T2, Cmp_T>::value;
 
 	template<TUPLE_UTIL_CONTAINER Tup1, typename ... T1s, TUPLE_UTIL_CONTAINER Tup2, typename ... T2s, TUPLE_UTIL_COMPARE Cmp_T>
@@ -472,7 +535,7 @@ namespace TUPLE_UTIL_NAMESPACE::cmp {
 		static constexpr bool value = (sizeof...(T1s) == sizeof...(T2s)) && (pred::element_of_v<T1s, Tup2<T2s...>, Cmp_T> && ...);
 	};
 
-	template<typename Tup1, TUPLE_UTIL_COMPARE Cmp_T=std::is_same>
+	template<typename Tup1, TUPLE_UTIL_COMPARE Cmp_T=TUPLE_UTIL_DEFAULT_COMPARE>
 	struct is_same_set_ {
 		template<typename Tup2> using type = is_same_set<Tup1, Tup2, Cmp_T>;
 		template<typename Tup2> using inv = std::negation<type<Tup2>>;
