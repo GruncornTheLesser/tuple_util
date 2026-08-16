@@ -36,44 +36,63 @@ namespace TUPLE_UTIL_NAMESPACE::pred {
 
 namespace TUPLE_UTIL_NAMESPACE {
 	template<typename Tup> 
-	struct arg_count;
+	struct count;
 
 	template<typename Tup> 
-	static constexpr std::size_t arg_count_v = arg_count<Tup>::value;
+	static constexpr std::size_t count_v = count<Tup>::value;
 
 	template<TUPLE_UTIL_CONTAINER Tup, typename ... Ts> 
-	struct arg_count<Tup<Ts...>> { static constexpr std::size_t value = sizeof...(Ts); };
-
+	struct count<Tup<Ts...>> { static constexpr std::size_t value = sizeof...(Ts); };
 
 	
+
+	template<typename Tup, TUPLE_UTIL_CONTAINER Pred_Tp>
+	struct count_if;
+
+	template<typename Tup, TUPLE_UTIL_CONTAINER Pred_Tp>
+	static constexpr std::size_t count_if_v = count_if<Tup, Pred_Tp>::value;
+
+	template<TUPLE_UTIL_CONTAINER Pred_Tp>
+	struct count_if_ {
+		template<typename Tup> using type = count_if<Tup, Pred_Tp>;
+		template<typename Tup> using inv = count_if<Tup, cmp::negate_<Pred_Tp>::template type>;
+	};
+
+	template<TUPLE_UTIL_CONTAINER Tp, typename ... Ts, TUPLE_UTIL_CONTAINER Pred_Tp>
+	struct count_if<Tp<Ts...>, Pred_Tp> {
+		static constexpr std::size_t value = (Pred_Tp<Ts>::value + ...);
+	};
+
+	
+	
 	template<std::size_t N, typename Tup> 
-	struct arg_at;
+	struct at;
 
 	template<std::size_t N>
-	struct arg_at_ { template<typename Tup> using type = arg_at<N, Tup>; };
+	struct at_ { template<typename Tup> using type = at<N, Tup>; };
 
 	template<std::size_t N, typename Tup> 
-	using arg_at_t = typename arg_at<N, Tup>::type;
+	using at_t = typename at<N, Tup>::type;
 
 	template<std::size_t N, TUPLE_UTIL_CONTAINER Tp, typename T, typename ... Ts>
-	struct arg_at<N, Tp<T, Ts...>> : arg_at<N - 1u, Tp<Ts...>> { };
+	struct at<N, Tp<T, Ts...>> : at<N - 1u, Tp<Ts...>> { };
 
 	template<TUPLE_UTIL_CONTAINER Tp, typename T, typename ... Ts>
-	struct arg_at<0, Tp<T, Ts...>> { using type = T; };
+	struct at<0, Tp<T, Ts...>> { using type = T; };
 
 	
 	template<typename Tup>
-	using arg_front = arg_at<0, Tup>;
+	using front = at<0, Tup>;
 
 	template<typename Tup>
-	using arg_front_t = typename arg_front<Tup>::type;
+	using front_t = typename front<Tup>::type;
 
 
 	template<typename Tup>
-	using arg_back = arg_at<arg_count_v<Tup> - 1, Tup>;
+	using back = at<count_v<Tup> - 1, Tup>;
 
 	template<typename Tup>
-	using arg_back_t = typename arg_back<Tup>::type;
+	using back_t = typename back<Tup>::type;
 
 
 
@@ -102,7 +121,7 @@ namespace TUPLE_UTIL_NAMESPACE {
 
 	template<TUPLE_UTIL_CONTAINER Tup, typename ... Ts, std::size_t ... Is>
 	struct subset<Tup<Ts...>, std::index_sequence<Is...>> {
-		using type = Tup<arg_at_t<Is, Tup<Ts...>>...>;
+		using type = Tup<at_t<Is, Tup<Ts...>>...>;
 	};
 
 
@@ -228,7 +247,7 @@ namespace TUPLE_UTIL_NAMESPACE {
 	struct pop_back;
 
 	template<typename Tup>
-	struct pop_back : subset<Tup, std::make_index_sequence<arg_count_v<Tup> - 1>> { };
+	struct pop_back : subset<Tup, std::make_index_sequence<count_v<Tup> - 1>> { };
 
 	template<typename Tup>
 	using pop_back_t = typename pop_back<Tup>::type;
