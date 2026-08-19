@@ -111,14 +111,14 @@ namespace TUPLE_UTIL_NAMESPACE {
 	template<typename T> struct remove_rval_ref<T&&> { using type = T; };
 	template<typename T> using remove_rval_ref_t = typename remove_rval_ref<T>::type;
 
-	template<typename T> struct remove_cv : eval<T, remove_const, remove_volatile> { };
-	template<typename T> using remove_cv_t = typename remove_cv<T>::type;
+	template<typename T> using remove_cv = std::remove_cv<T>;
+	template<typename T> using remove_cv_t = std::remove_cv_t<T>;
 
 	template<typename T> using remove_ref = std::remove_reference<T>;
 	template<typename T> using remove_ref_t = typename remove_ref<T>::type;
 
-	template<typename T> struct remove_cv_ref : eval<T, remove_cv, remove_ref> { };
-	template<typename T> using remove_cv_ref_t = typename remove_cv_ref<T>::type;
+	template<typename T> using remove_cv_ref = std::remove_cvref<T>;
+	template<typename T> using remove_cv_ref_t = std::remove_cvref_t<T>;
 
 	template<typename T> struct remove_indirect { using type = T; };
 	template<typename T> struct remove_indirect<T*> { using type = T; };

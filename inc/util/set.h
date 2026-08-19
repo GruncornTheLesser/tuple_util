@@ -315,42 +315,45 @@ namespace TUPLE_UTIL_NAMESPACE {
 
 
 	namespace details {
-		template<typename Tup, TUPLE_UTIL_PREDICATE Pred_Tp, std::size_t N = 0>
+		template<typename Tup, typename Out, TUPLE_UTIL_PREDICATE ... Pred_Tp>
 		struct find_if;
 
-		template<TUPLE_UTIL_CONTAINER Tup, typename T, typename ... Ts, TUPLE_UTIL_PREDICATE Pred_Tp, std::size_t N>
+		template<TUPLE_UTIL_CONTAINER Tup, typename T, typename ... Ts, typename ... Os, TUPLE_UTIL_PREDICATE Pred_Tp, TUPLE_UTIL_PREDICATE ... Pred_Tps>
 			requires (!Pred_Tp<T>::value)
-		struct find_if<Tup<T, Ts...>, Pred_Tp, N> : find_if<Tup<Ts...>, Pred_Tp, N + 1> { };
+		struct find_if<Tup<T, Ts...>, Tup<Os...>, Pred_Tp, Pred_Tps...> : find_if<Tup<Ts...>, Tup<Os..., T>, Pred_Tp, Pred_Tps...> { };
 	
-		template<TUPLE_UTIL_CONTAINER Tup, typename T, typename ... Ts, TUPLE_UTIL_PREDICATE Pred_Tp, std::size_t N>
+		template<TUPLE_UTIL_CONTAINER Tup, typename T, typename ... Ts, typename ... Os, TUPLE_UTIL_PREDICATE Pred_Tp, TUPLE_UTIL_PREDICATE ... Pred_Tps>
 			requires (Pred_Tp<T>::value)
-		struct find_if<Tup<T, Ts...>, Pred_Tp, N> { using type = T; static constexpr std::size_t value = N; };
+		struct find_if<Tup<T, Ts...>, Tup<Os...>, Pred_Tp, Pred_Tps...> { using type = T; static constexpr std::size_t value = sizeof...(Os); };
 
-		template<TUPLE_UTIL_CONTAINER Tup, TUPLE_UTIL_PREDICATE Pred_Tp, std::size_t N>
-		struct find_if<Tup<>, Pred_Tp, N> { static constexpr std::size_t value = N; };
+		template<TUPLE_UTIL_CONTAINER Tup, typename ... Os, TUPLE_UTIL_PREDICATE Pred_Tp, TUPLE_UTIL_PREDICATE ... Pred_Tps>	
+		struct find_if<Tup<>, Tup<Os...>, Pred_Tp, Pred_Tps...> : find_if<Tup<Os...>, Tup<>, Pred_Tps...> { };
+
+		template<TUPLE_UTIL_CONTAINER Tup, typename ... Os, TUPLE_UTIL_PREDICATE Pred_Tp>	
+		struct find_if<Tup<>, Tup<Os...>, Pred_Tp> { static constexpr std::size_t value = sizeof...(Os); };
 	}
 	
-	template<typename Tup, TUPLE_UTIL_PREDICATE Pred_Tp>
-	using find_if = details::find_if<Tup, Pred_Tp>;
+	template<typename Tup, TUPLE_UTIL_PREDICATE ... Pred_Tps>
+	using find_if = details::find_if<Tup, clear_t<Tup>, Pred_Tps...>;
 	
-	template<TUPLE_UTIL_PREDICATE Pred_Tp>
-	struct find_if_ { template<typename Tup> using type = find_if<Tup, Pred_Tp>; };
+	template<TUPLE_UTIL_PREDICATE ... Pred_Tps>
+	struct find_if_ { template<typename Tup> using type = find_if<Tup, Pred_Tps...>; };
 	
-	template<typename Tup, TUPLE_UTIL_PREDICATE Pred_Tp>
-	using find_if_t = typename find_if<Tup, Pred_Tp>::type;
+	template<typename Tup, TUPLE_UTIL_PREDICATE ... Pred_Tps>
+	using find_if_t = typename find_if<Tup, Pred_Tps...>::type;
 
-	template<typename Tup, TUPLE_UTIL_PREDICATE Pred_Tp>
-	static constexpr unsigned int find_if_v = find_if<Tup, Pred_Tp>::value;
+	template<typename Tup, TUPLE_UTIL_PREDICATE ... Pred_Tps>
+	static constexpr unsigned int find_if_v = find_if<Tup, Pred_Tps...>::value;
 	
 
 
 	template<typename Tup, typename T, TUPLE_UTIL_COMPARE Cmp_T=TUPLE_UTIL_DEFAULT_COMPARE>
-	using find = details::find_if<Tup, cmp::to_<T, Cmp_T>::template type>;
+	using find = details::find_if<Tup, clear_t<Tup>, cmp::to_<T, Cmp_T>::template type>;
 
 	template<typename T, TUPLE_UTIL_COMPARE Cmp_T>
 	struct find_ {
-		template<typename Tup> using type = details::find_if<Tup, cmp::to_<T, Cmp_T>::template type>;
-		template<typename Tup> using inv = details::find_if<Tup, cmp::to_<T, Cmp_T>::template inv>;
+		template<typename Tup> using type = find<Tup, clear_t<Tup>, cmp::to_<T, Cmp_T>::template type>;
+		template<typename Tup> using inv = details::find_if<Tup, clear_t<Tup>, cmp::to_<T, Cmp_T>::template inv>;
 	};
 
 	template<typename Tup, typename T, TUPLE_UTIL_COMPARE Cmp_T=TUPLE_UTIL_DEFAULT_COMPARE>
