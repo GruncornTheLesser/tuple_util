@@ -46,7 +46,7 @@ namespace TUPLE_UTIL_NAMESPACE::cmp {
 	
 	template<TUPLE_UTIL_COMPARE ... Cmp_Tps>
 	struct disj_ {
-		template<typename LHS_T, typename RHS_T> using type = disj<Cmp_Tps<LHS_T, RHS_T>...>;
+		template<typename LHS_T, typename RHS_T> using type = disj<LHS_T, RHS_T, Cmp_Tps...>;
 		template<typename LHS_T, typename RHS_T> using inv =  negate<LHS_T, RHS_T, type>;
 	};
 

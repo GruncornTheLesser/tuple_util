@@ -18,7 +18,7 @@ namespace TUPLE_UTIL_NAMESPACE::pred {
 	};
 	template<TUPLE_UTIL_PREDICATE ... Pred_Ts>
 	struct disj_ {
-		template<typename T> using type = disj<Pred_Ts<T>...>;
+		template<typename T> using type = disj<T, Pred_Ts...>;
 		template<typename T> using inv =  negate<T, type>;
 	};
 	template<typename T, TUPLE_UTIL_PREDICATE ... Pred_Ts>
@@ -30,7 +30,7 @@ namespace TUPLE_UTIL_NAMESPACE::pred {
 	};
 	template<TUPLE_UTIL_PREDICATE ... Pred_Ts>
 	struct conj_ {
-		template<typename T> using type = conj<Pred_Ts<T>...>;
+		template<typename T> using type = conj<T, Pred_Ts...>;
 		template<typename T> using inv =  negate<T, type>;
 	};
 	template<typename T, TUPLE_UTIL_PREDICATE ... Pred_Ts>

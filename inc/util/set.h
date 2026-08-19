@@ -55,7 +55,7 @@ namespace TUPLE_UTIL_NAMESPACE {
 	template<TUPLE_UTIL_CONTAINER Pred_Tp>
 	struct count_if_ {
 		template<typename Tup> using type = count_if<Tup, Pred_Tp>;
-		template<typename Tup> using inv = count_if<Tup, cmp::negate_<Pred_Tp>::template type>;
+		template<typename Tup> using inv = count_if<Tup, pred::negate_<Pred_Tp>::template type>;
 	};
 
 	template<TUPLE_UTIL_CONTAINER Tp, typename ... Ts, TUPLE_UTIL_CONTAINER Pred_Tp>
