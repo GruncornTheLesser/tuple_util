@@ -58,8 +58,8 @@ namespace TUPLE_UTIL_NAMESPACE {
 		template<typename Tup> using inv = count_if<Tup, pred::negate_<Pred_Tp>::template type>;
 	};
 
-	template<TUPLE_UTIL_CONTAINER Tp, typename ... Ts, TUPLE_UTIL_CONTAINER Pred_Tp>
-	struct count_if<Tp<Ts...>, Pred_Tp> {
+	template<TUPLE_UTIL_CONTAINER Tup, typename ... Ts, TUPLE_UTIL_CONTAINER Pred_Tp>
+	struct count_if<Tup<Ts...>, Pred_Tp> {
 		static constexpr std::size_t value = (Pred_Tp<Ts>::value + ...);
 	};
 
@@ -74,11 +74,11 @@ namespace TUPLE_UTIL_NAMESPACE {
 	template<std::size_t N, typename Tup> 
 	using at_t = typename at<N, Tup>::type;
 
-	template<std::size_t N, TUPLE_UTIL_CONTAINER Tp, typename T, typename ... Ts>
-	struct at<N, Tp<T, Ts...>> : at<N - 1u, Tp<Ts...>> { };
+	template<std::size_t N, TUPLE_UTIL_CONTAINER Tup, typename T, typename ... Ts>
+	struct at<N, Tup<T, Ts...>> : at<N - 1u, Tup<Ts...>> { };
 
-	template<TUPLE_UTIL_CONTAINER Tp, typename T, typename ... Ts>
-	struct at<0, Tp<T, Ts...>> { using type = T; };
+	template<TUPLE_UTIL_CONTAINER Tup, typename T, typename ... Ts>
+	struct at<0, Tup<T, Ts...>> { using type = T; };
 
 	
 	template<typename Tup>
@@ -258,16 +258,16 @@ namespace TUPLE_UTIL_NAMESPACE {
 		template<typename In, TUPLE_UTIL_PREDICATE Pred_Tp, typename Out>
 		struct filter;
 
-		template<TUPLE_UTIL_CONTAINER Tp, typename In_T, typename ... In_Ts, TUPLE_UTIL_PREDICATE Pred_Tp, typename ... Out_Ts>
+		template<TUPLE_UTIL_CONTAINER Tup, typename In_T, typename ... In_Ts, TUPLE_UTIL_PREDICATE Pred_Tp, typename ... Out_Ts>
 			requires (Pred_Tp<In_T>::value)
-		struct filter<Tp<In_T, In_Ts...>, Pred_Tp, Tp<Out_Ts...>> : filter<Tp<In_Ts...>, Pred_Tp, Tp<Out_Ts..., In_T>> { };
+		struct filter<Tup<In_T, In_Ts...>, Pred_Tp, Tup<Out_Ts...>> : filter<Tup<In_Ts...>, Pred_Tp, Tup<Out_Ts..., In_T>> { };
 
-		template<TUPLE_UTIL_CONTAINER Tp, typename In_T, typename ... In_Ts, TUPLE_UTIL_PREDICATE Pred_Tp, typename ... Out_Ts>
+		template<TUPLE_UTIL_CONTAINER Tup, typename In_T, typename ... In_Ts, TUPLE_UTIL_PREDICATE Pred_Tp, typename ... Out_Ts>
 			requires (!Pred_Tp<In_T>::value)
-		struct filter<Tp<In_T, In_Ts...>, Pred_Tp, Tp<Out_Ts...>> : filter<Tp<In_Ts...>, Pred_Tp, Tp<Out_Ts...>> { };
+		struct filter<Tup<In_T, In_Ts...>, Pred_Tp, Tup<Out_Ts...>> : filter<Tup<In_Ts...>, Pred_Tp, Tup<Out_Ts...>> { };
 
-		template<TUPLE_UTIL_CONTAINER Tp, TUPLE_UTIL_PREDICATE Pred_Tp, typename ... Out_Ts>
-		struct filter<Tp<>, Pred_Tp, Tp<Out_Ts...>> { using type = Tp<Out_Ts...>; };
+		template<TUPLE_UTIL_CONTAINER Tup, TUPLE_UTIL_PREDICATE Pred_Tp, typename ... Out_Ts>
+		struct filter<Tup<>, Pred_Tp, Tup<Out_Ts...>> { using type = Tup<Out_Ts...>; };
 	}
 
 	template<typename Tup, TUPLE_UTIL_PREDICATE Pred_Tp>
@@ -285,32 +285,35 @@ namespace TUPLE_UTIL_NAMESPACE {
 
 
 	namespace details {
-		template<typename In, TUPLE_UTIL_PREDICATE Pred_Tp, typename LHS, typename RHS>
+		template<typename In, typename LHS, typename RHS, TUPLE_UTIL_PREDICATE ... Pred_Tp>
 		struct partition;
 
-		template<TUPLE_UTIL_CONTAINER Tp, typename In_T, typename ... In_Ts, TUPLE_UTIL_PREDICATE Pred_Tp, typename ... L_Ts, typename ... R_Ts>
+		template<TUPLE_UTIL_CONTAINER Tup, typename In_T, typename ... In_Ts, typename ... L_Ts, typename ... R_Ts, TUPLE_UTIL_PREDICATE Pred_Tp, TUPLE_UTIL_PREDICATE ... Pred_Tps>
 			requires (Pred_Tp<In_T>::value)
-		struct partition<Tp<In_T, In_Ts...>, Pred_Tp, Tp<L_Ts...>, Tp<R_Ts...>> : partition<Tp<In_Ts...>, Pred_Tp, Tp<L_Ts..., In_T>, Tp<R_Ts...>> { };
+		struct partition<Tup<In_T, In_Ts...>, Tup<L_Ts...>, Tup<R_Ts...>, Pred_Tp, Pred_Tps...> : partition<Tup<In_Ts...>, Tup<L_Ts..., In_T>, Tup<R_Ts...>, Pred_Tp, Pred_Tps...> { };
 
-		template<TUPLE_UTIL_CONTAINER Tp, typename In_T, typename ... In_Ts, TUPLE_UTIL_PREDICATE Pred_Tp, typename ... L_Ts, typename ... R_Ts>
+		template<TUPLE_UTIL_CONTAINER Tup, typename In_T, typename ... In_Ts, typename ... L_Ts, typename ... R_Ts, TUPLE_UTIL_PREDICATE Pred_Tp, TUPLE_UTIL_PREDICATE ... Pred_Tps>
 			requires (!Pred_Tp<In_T>::value)
-		struct partition<Tp<In_T, In_Ts...>, Pred_Tp, Tp<L_Ts...>, Tp<R_Ts...>> : partition<Tp<In_Ts...>, Pred_Tp, Tp<L_Ts...>, Tp<R_Ts..., In_T>> { };
+		struct partition<Tup<In_T, In_Ts...>, Tup<L_Ts...>, Tup<R_Ts...>, Pred_Tp, Pred_Tps...> : partition<Tup<In_Ts...>, Tup<L_Ts...>, Tup<R_Ts..., In_T>, Pred_Tp, Pred_Tps...> { };
 
-		template<TUPLE_UTIL_CONTAINER Tp, TUPLE_UTIL_PREDICATE Pred_Tp, typename ... L_Ts, typename ... R_Ts>
-		struct partition<Tp<>, Pred_Tp, Tp<L_Ts...>, Tp<R_Ts...>> { using type = Tp<L_Ts..., R_Ts...>; };
+		template<TUPLE_UTIL_CONTAINER Tup, typename ... L_Ts, typename ... R_Ts, TUPLE_UTIL_PREDICATE Pred_Tp, TUPLE_UTIL_PREDICATE ... Pred_Tps>
+		struct partition<Tup<>, Tup<L_Ts...>, Tup<R_Ts...>, Pred_Tp, Pred_Tps...> : partition<Tup<R_Ts...>, Tup<L_Ts...>, Tup<>, Pred_Tps...> { };
+		
+		template<TUPLE_UTIL_CONTAINER Tup, typename ... L_Ts, typename ... R_Ts, TUPLE_UTIL_PREDICATE Pred_Tp>
+		struct partition<Tup<>, Tup<L_Ts...>, Tup<R_Ts...>, Pred_Tp> { using type = Tup<L_Ts..., R_Ts...>; };
 	}
 
-	template<typename Tup, TUPLE_UTIL_PREDICATE Pred_Tp>
-	using partition = details::partition<Tup, Pred_Tp, clear_t<Tup>, clear_t<Tup>>;
+	template<typename Tup, TUPLE_UTIL_PREDICATE ... Pred_Tps>
+	using partition = details::partition<Tup, clear_t<Tup>, clear_t<Tup>, Pred_Tps...>;
 	
-	template<TUPLE_UTIL_PREDICATE Pred_Tp>
+	template<TUPLE_UTIL_PREDICATE ... Pred_Tps>
 	struct partition_ { 
-		template<typename Tup> using type = partition<Tup, Pred_Tp>;
-		template<typename Tup> using inv =  partition<Tup, pred::negate_<Pred_Tp>::template type>;
+		template<typename Tup> using type = partition<Tup, Pred_Tps...>;
+		template<typename Tup> using inv =  partition<Tup, pred::negate_<Pred_Tps>::template type...>;
 	};
 	
-	template<typename Tup, TUPLE_UTIL_PREDICATE Pred_Tp>
-	using partition_t = typename partition<Tup, Pred_Tp>::type;
+	template<typename Tup, TUPLE_UTIL_PREDICATE ... Pred_Tps>
+	using partition_t = typename partition<Tup, Pred_Tps...>::type;
 
 
 
