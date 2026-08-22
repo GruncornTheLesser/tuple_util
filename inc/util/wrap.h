@@ -1,6 +1,7 @@
 #pragma once
 #include "util/macro.h"
 #include <type_traits>
+#include <utility>
 
 namespace TUPLE_UTIL_NAMESPACE {
 	template<typename T, TUPLE_UTIL_CONTAINER Tup>
@@ -11,17 +12,33 @@ namespace TUPLE_UTIL_NAMESPACE {
 
 	template<typename T, TUPLE_UTIL_CONTAINER Tup> using rewrap_t = typename rewrap<T, Tup>::type;
 
-	template<TUPLE_UTIL_CONTAINER Tup1, typename ... Ts, TUPLE_UTIL_CONTAINER Tup2> requires requires { typename Tup2<Ts...>; }
+	template<TUPLE_UTIL_CONTAINER Tup1, typename ... Ts, TUPLE_UTIL_CONTAINER Tup2>
 	struct rewrap<Tup1<Ts...>, Tup2> { using type = Tup2<Ts...>; };
 
-	template<typename T, TUPLE_UTIL_CONTAINER Tup> requires requires { typename Tup<T>; }
-	struct wrap { using type = Tup<T>; };
+	namespace details {
+		template<std::size_t N, typename T>
+		struct identity_at { using type = T; };
+		
+		template<typename T, TUPLE_UTIL_CONTAINER Tup, typename Ind>
+		struct wrap;
 
-	template<TUPLE_UTIL_CONTAINER Tup>
-	struct wrap_ { template<typename T> using type = wrap<T, Tup>; };
+		template<typename T, TUPLE_UTIL_CONTAINER Tup, std::size_t ... Is>
+		struct wrap<T, Tup, std::index_sequence<Is...>> {
+			using type = Tup<typename identity_at<Is, T>::type...>;
+		};
+	}
 
-	template<typename T, TUPLE_UTIL_CONTAINER Tups>
-	using wrap_t = typename wrap<T, Tups>::type;
+	template<typename T, TUPLE_UTIL_CONTAINER Tup=TUPLE_UTIL_DEFAULT_CONTAINER, std::size_t N=1>
+	struct wrap : details::wrap<T, Tup, std::make_index_sequence<N>> { };
+
+	template<typename T, TUPLE_UTIL_CONTAINER Tup>
+	struct wrap<T, Tup, 1> { using type = Tup<T>; };
+
+	template<TUPLE_UTIL_CONTAINER Tup=TUPLE_UTIL_DEFAULT_CONTAINER, std::size_t N=1>
+	struct wrap_ { template<typename T> using type = wrap<T, Tup, N>; };
+
+	template<typename T, TUPLE_UTIL_CONTAINER Tup=TUPLE_UTIL_DEFAULT_CONTAINER, std::size_t N=1>
+	using wrap_t = typename wrap<T, Tup, N>::type;
 
 
 	template<typename T>
@@ -32,6 +49,15 @@ namespace TUPLE_UTIL_NAMESPACE {
 
 	template<typename T>
 	using unwrap_t = typename unwrap<T>::type;
+
+
+	namespace details {
+		template<typename T, std::size_t N>
+		struct duplicate;
+
+		template<typename T, std::size_t N>
+		struct duplicate;
+	}
 }
 
 namespace TUPLE_UTIL_NAMESPACE::pred {
