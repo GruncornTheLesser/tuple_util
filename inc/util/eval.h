@@ -1,6 +1,7 @@
 #pragma once
 #include "util/macro.h"
 #include <type_traits>
+#include <utility>
 
 // [ ] eval - transform
 namespace TUPLE_UTIL_NAMESPACE {
@@ -58,17 +59,17 @@ namespace TUPLE_UTIL_NAMESPACE {
 
 	template<typename Tup, TUPLE_UTIL_TRANSFORM ... Trans_Tps>
 	struct eval_each;
-
-	template<typename Tup, TUPLE_UTIL_TRANSFORM ... Trans_Tps>
-	using eval_each_t = typename eval_each<Tup, Trans_Tps...>::type;
-
+	
 	template<TUPLE_UTIL_CONTAINER Tup, typename ... Ts, TUPLE_UTIL_TRANSFORM ... Trans_Tps>
 	struct eval_each<Tup<Ts...>, Trans_Tps...> {
 		using type = Tup<typename eval<Ts, Trans_Tps...>::type...>;
 	};
-
+	
 	template<TUPLE_UTIL_TRANSFORM ... Trans_Tps>
 	struct eval_each_ { template<typename Tup> using type = eval_each<Tup, Trans_Tps...>; };
+	
+	template<typename Tup, TUPLE_UTIL_TRANSFORM ... Trans_Tps>
+	using eval_each_t = typename eval_each<Tup, Trans_Tps...>::type;
 
 
 	

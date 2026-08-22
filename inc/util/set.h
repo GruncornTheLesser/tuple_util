@@ -181,6 +181,8 @@ namespace TUPLE_UTIL_NAMESPACE {
 	template<typename Tup>
 	using reverse_t = typename reverse<Tup>::type;
 
+
+
 	template<typename Tup, typename ... Ts>
 	struct push_back;
 
@@ -211,18 +213,24 @@ namespace TUPLE_UTIL_NAMESPACE {
 
 
 
-	template<typename Tup, std::size_t N, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
-	struct eval_at;
+	namespace details {
+		template<typename T, std::size_t I, std::size_t J, TUPLE_UTIL_TRANSFORM Trans_T>
+		struct eval_at_element { using type = T; };
 
-	template<TUPLE_UTIL_CONTAINER Tup, typename T, typename ... Ts, std::size_t N, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
-	struct eval_at<Tup<T, Ts...>, N, Trans_Ts...> { 
-		using type = typename push_front<typename eval_at<Tup<Ts...>, N - 1, Trans_Ts...>::type, T>::type;
-	};
+		template<typename T, std::size_t I, TUPLE_UTIL_TRANSFORM Trans_T>
+		struct eval_at_element<T, I, I, Trans_T> : Trans_T<T> { };
+		
+		template<typename Tup, std::size_t I, TUPLE_UTIL_TRANSFORM Trans_T, typename Ind=std::make_index_sequence<count_v<Tup>>>
+		struct eval_at;
 
-	template<TUPLE_UTIL_CONTAINER Tup, typename T, typename ... Ts, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
-	struct eval_at<Tup<T, Ts...>, 0, Trans_Ts...> { 
-		using type = Tup<eval_t<T, Trans_Ts...>, Ts...>;
-	};
+		template<TUPLE_UTIL_CONTAINER Tp, typename ... Ts, std::size_t I, TUPLE_UTIL_TRANSFORM Trans_T, std::size_t ... Is>
+		struct eval_at<Tp<Ts...>, I, Trans_T, std::index_sequence<Is...>> {
+			using type = Tp<typename eval_at_element<Ts, I, Is, Trans_T>::type...>;
+		};
+	}
+
+	template<typename Tup, std::size_t I, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
+	using eval_at = details::eval_at<Tup, I, eval_<Trans_Ts...>::template type>;
 
 	template<typename Tup, std::size_t N, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	using eval_at_t = typename eval_at<Tup, N, Trans_Ts...>::type; 
