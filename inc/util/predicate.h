@@ -66,6 +66,14 @@ namespace TUPLE_UTIL_NAMESPACE::pred {
 	template<typename Tup, TUPLE_UTIL_PREDICATE Pred_T>
 	static constexpr bool allof_v = allof<Tup, Pred_T>::value;
 
+	template<typename Tup>
+	struct empty { static constexpr bool value = false; };
+
+	template<TUPLE_UTIL_CONTAINER Tp>
+	struct empty<Tp<>> { static constexpr bool value = true; };
+
+	template<typename Tup>
+	static constexpr bool empty_v = empty<Tup>::value;
 
 	// pred against a transformed T
 	template<typename T, TUPLE_UTIL_PREDICATE Pred_T, TUPLE_UTIL_TRANSFORM Trans_T> requires requires { typename Trans_T<T>::type; }
