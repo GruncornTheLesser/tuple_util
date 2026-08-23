@@ -79,6 +79,10 @@ namespace TUPLE_UTIL_NAMESPACE::cmp {
 namespace TUPLE_UTIL_NAMESPACE {
 	// default Attrib_Tp
 	template<typename T> struct get_value { static constexpr auto value = T::value; };
+	template<typename T> static constexpr auto get_v = get_value<T>::value;
+
+	template<typename T> struct get_type { using type = typename T::type; };
+	template<typename T> using get_t = typename get_type<T>::type;
 }
 
 // compare attribs
