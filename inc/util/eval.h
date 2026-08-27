@@ -42,11 +42,11 @@ namespace TUPLE_UTIL_NAMESPACE {
 	using eval_if_t = typename eval_if<T, Pred_Tp, If_Tp, Else_Tp>::type;
 
 	template<typename T, TUPLE_UTIL_PREDICATE Pred_Tp, TUPLE_UTIL_TRANSFORM If_Tp, TUPLE_UTIL_TRANSFORM Else_Tp>
-		requires (Pred_Tp<T>::value) && requires { typename If_Tp<T>::type; }
+		requires (Pred_Tp<T>::value)
 	struct eval_if<T, Pred_Tp, If_Tp, Else_Tp> : If_Tp<T> { };
 
 	template<typename T, TUPLE_UTIL_PREDICATE Pred_Tp, TUPLE_UTIL_TRANSFORM If_Tp, TUPLE_UTIL_TRANSFORM Else_Tp>
-		requires (!Pred_Tp<T>::value) && requires { typename Else_Tp<T>::type; }
+		requires (!Pred_Tp<T>::value)
 	struct eval_if<T, Pred_Tp, If_Tp, Else_Tp> : Else_Tp<T> { };
 
 	template<TUPLE_UTIL_PREDICATE Pred_Tp, TUPLE_UTIL_TRANSFORM If_Tp, TUPLE_UTIL_TRANSFORM Else_Tp = eval_<>::type>
@@ -105,14 +105,15 @@ namespace TUPLE_UTIL_NAMESPACE {
 	using eval_try_t = typename eval_try<T, Trans_T, D>::type;
 
 
-	template<typename T, typename D>
-	struct supersede { using type = D; };
 	
-	template<typename T, typename D>
-	using supersede_t = D;
+	template<typename T, typename D, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
+	using put = eval<D, Trans_Ts...>;
+	
+	template<typename T, typename D, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
+	using put_t = eval_t<D, Trans_Ts...>;
 
-	template<typename D>
-	struct supersede_ { 
-		template<typename T> using type = supersede<T, D>;
+	template<typename D, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
+	struct put_ { 
+		template<typename T> using type = eval<D, Trans_Ts...>;
 	};
 }
