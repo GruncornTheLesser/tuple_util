@@ -213,6 +213,44 @@ namespace TUPLE_UTIL_NAMESPACE {
 
 
 
+	template<typename Tup1, typename Tup2>
+	struct append_range;
+
+	template<TUPLE_UTIL_CONTAINER Tp1, typename ... Ts1, TUPLE_UTIL_CONTAINER Tp2, typename ... Ts2>
+	struct append_range<Tp1<Ts1...>, Tp2<Ts2...>> { 
+		using type = Tp1<Ts1..., Ts2...>;
+	};
+
+	template<typename Tup2>
+	struct append_range_ {
+		template<typename Tup1> using type = append_range<Tup1, Tup2>;
+	};
+
+	template<typename Tup1, typename Tup2>
+	using append_range_t = typename append_range<Tup1, Tup2>::type;
+
+
+
+	template<typename Tup1, typename Tup2>
+	struct prepend_range;
+
+	template<TUPLE_UTIL_CONTAINER Tp1, typename ... Ts1, TUPLE_UTIL_CONTAINER Tp2, typename ... Ts2>
+	struct prepend_range<Tp1<Ts1...>, Tp2<Ts2...>> { 
+		using type = Tp1<Ts2..., Ts1...>;
+	};
+
+	template<typename Tup2>
+	struct prepend_range_ {
+		template<typename Tup1> using type = prepend_range<Tup1, Tup2>;
+	};
+
+	template<typename Tup1, typename Tup2>
+	using prepend_range_t = typename prepend_range<Tup1, Tup2>::type;
+
+
+
+
+
 	namespace details {
 		template<typename T, std::size_t I, std::size_t J, TUPLE_UTIL_TRANSFORM Trans_T>
 		struct eval_at_element { using type = T; };
