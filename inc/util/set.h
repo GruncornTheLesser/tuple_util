@@ -213,21 +213,21 @@ namespace TUPLE_UTIL_NAMESPACE {
 
 
 
-	template<typename Tup1, typename Tup2>
-	struct append_range;
+	template<typename Tup1, typename Tup2, TUPLE_UTIL_TRANSFORM ... Trans_Tps>
+	struct append_range : append_range<Tup1, eval_t<Tup1, Trans_Tps...>> { };
 
 	template<TUPLE_UTIL_CONTAINER Tp1, typename ... Ts1, TUPLE_UTIL_CONTAINER Tp2, typename ... Ts2>
 	struct append_range<Tp1<Ts1...>, Tp2<Ts2...>> { 
 		using type = Tp1<Ts1..., Ts2...>;
 	};
 
-	template<typename Tup2>
+	template<typename Tup2, TUPLE_UTIL_TRANSFORM ... Trans_Tps>
 	struct append_range_ {
-		template<typename Tup1> using type = append_range<Tup1, Tup2>;
+		template<typename Tup1> using type = append_range<Tup1, Tup2, Trans_Tps...>;
 	};
 
-	template<typename Tup1, typename Tup2>
-	using append_range_t = typename append_range<Tup1, Tup2>::type;
+	template<typename Tup1, typename Tup2, TUPLE_UTIL_TRANSFORM ... Trans_Tps>
+	using append_range_t = typename append_range<Tup1, Tup2, Trans_Tps...>::type;
 
 
 
