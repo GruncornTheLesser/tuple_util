@@ -41,6 +41,23 @@ namespace TUPLE_UTIL_NAMESPACE {
 	using wrap_t = typename wrap<T, Tup, N>::type;
 
 
+
+	template<typename T, TUPLE_UTIL_CONTAINER Tp, TUPLE_UTIL_TRANSFORM ... Trans_Tps>
+	struct wrap_each {
+		using type = Tp<typename Trans_Tps<T>::type...>;
+	};
+
+	template<TUPLE_UTIL_CONTAINER Tp, TUPLE_UTIL_TRANSFORM ... Trans_Tps>
+	struct wrap_each_ {
+		template<typename T> using type = wrap_each<T, Tp, Trans_Tps...>;
+	};
+
+	template<typename T, TUPLE_UTIL_CONTAINER Tp, TUPLE_UTIL_TRANSFORM ... Trans_Tps>
+	using wrap_each_t = typename wrap_each<T, Tp, Trans_Tps...>::type;
+
+
+
+
 	template<typename T>
 	struct unwrap;
 
