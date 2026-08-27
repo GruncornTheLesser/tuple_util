@@ -72,6 +72,21 @@ namespace TUPLE_UTIL_NAMESPACE {
 	using eval_each_t = typename eval_each<Tup, Trans_Tps...>::type;
 
 
+
+	template<typename T, TUPLE_UTIL_CONTAINER Tp, TUPLE_UTIL_TRANSFORM ... Trans_Tps>
+	struct eval_invoke {
+		using type = typename Tp<typename Trans_Tps<T>::type...>::type;
+	};
+
+	template<TUPLE_UTIL_CONTAINER Tp, TUPLE_UTIL_TRANSFORM ... Trans_Tps>
+	struct eval_invoke_ {
+		template<typename T> using type = eval_invoke<T, Tp, Trans_Tps...>;
+	};
+
+	template<typename T, TUPLE_UTIL_CONTAINER Tp, TUPLE_UTIL_TRANSFORM ... Trans_Tps>
+	using eval_invoke_t = typename eval_invoke<T, Tp, Trans_Tps...>::type;
+
+
 	
 	template<typename T, TUPLE_UTIL_PREDICATE Pred_T, TUPLE_UTIL_TRANSFORM ... Trans_Tps>
 	struct eval_while { using type = T; };
@@ -105,7 +120,7 @@ namespace TUPLE_UTIL_NAMESPACE {
 	using eval_try_t = typename eval_try<T, Trans_T, D>::type;
 
 
-	
+
 	template<typename T, typename D, TUPLE_UTIL_TRANSFORM ... Trans_Ts>
 	using put = eval<D, Trans_Ts...>;
 	
